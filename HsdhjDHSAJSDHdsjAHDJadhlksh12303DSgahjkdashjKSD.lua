@@ -9,16 +9,22 @@ local Window = OrionLib:MakeWindow({
 })
 
 local Tab = Window:MakeTab({
-    Name = "Tp",
+    Name = "Main",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
-local Section = Tab:AddSection({
+local LT2 = Window:MakeTab({
+    Name = "Lumber Tycoon 2",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local Section = LT2:AddSection({
 	Name = "Shops"
 })
 
-Tab:AddButton({
+LT2:AddButton({
     Name = "Wood R us",
     Callback = function()
         local player = game.Players.LocalPlayer
@@ -28,7 +34,7 @@ Tab:AddButton({
     end
 })
 
-Tab:AddButton({
+LT2:AddButton({
     Name = "Land Store",
     Callback = function()
         local player = game.Players.LocalPlayer
@@ -39,7 +45,7 @@ Tab:AddButton({
 })
 
 
-Tab:AddButton({
+LT2:AddButton({
     Name = "Car shop",
     Callback = function()
         local player = game.Players.LocalPlayer
@@ -49,7 +55,7 @@ Tab:AddButton({
     end
 })
 
-Tab:AddButton({
+LT2:AddButton({
     Name = "Furniture Shop",
     Callback = function()
         local player = game.Players.LocalPlayer
@@ -59,7 +65,7 @@ Tab:AddButton({
     end
 })
 
-Tab:AddButton({
+LT2:AddButton({
     Name = "FineArt Shop",
     Callback = function()
         local player = game.Players.LocalPlayer
@@ -69,7 +75,7 @@ Tab:AddButton({
     end
 })
 
-Tab:AddButton({
+LT2:AddButton({
     Name = "ShackShop",
     Callback = function()
         local player = game.Players.LocalPlayer
@@ -79,12 +85,12 @@ Tab:AddButton({
     end
 })
 
-local Section = Tab:AddSection({
+local Section = LT2:AddSection({
 	Name = "Biomes"
 })
 
 
-Tab:AddButton({
+LT2:AddButton({
     Name = "Swamp Location",
     Callback = function()
         local player = game.Players.LocalPlayer
@@ -94,7 +100,7 @@ Tab:AddButton({
     end
 })
 
-Tab:AddButton({
+LT2:AddButton({
     Name = "Volcano Location",
     Callback = function()
         local player = game.Players.LocalPlayer
@@ -104,7 +110,7 @@ Tab:AddButton({
     end
 })
 
-Tab:AddButton({
+LT2:AddButton({
     Name = "Palm Location",
     Callback = function()
         local player = game.Players.LocalPlayer
