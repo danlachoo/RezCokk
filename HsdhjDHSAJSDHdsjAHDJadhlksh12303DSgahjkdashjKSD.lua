@@ -237,6 +237,7 @@ local MiscSection = MiscTab:AddSection({
 })
 
 local camLockEnabled = false
+local camLockDistance = 100
 
 MiscSection:AddToggle({
     Name = "Enable CamLock",
@@ -247,12 +248,11 @@ MiscSection:AddToggle({
         local Camera = game.Workspace.CurrentCamera
 
         if Value then
-            -- CamLock logic here
             local function updateCamLock()
                 while camLockEnabled do
                     wait()
                     local targetPlayer = nil
-                    local closestDistance = math.huge
+                    local closestDistance = camLockDistance
 
                     for _, player in pairs(game.Players:GetPlayers()) do
                         if player ~= Player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
@@ -277,4 +277,155 @@ MiscSection:AddToggle({
             camLockEnabled = false
         end
     end    
+})
+
+MiscSection:AddSlider({
+    Name = "CamLock Distance",
+    Min = 50,
+    Max = 500,
+    Default = 100,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "Distance",
+    Callback = function(Value)
+        camLockDistance = Value
+    end    
+})
+
+-- Adding Da Hood tab
+local DaHoodTab = Window:MakeTab({
+    Name = "Da Hood",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local CamLockSection = DaHoodTab:AddSection({
+    Name = "CamLock"
+})
+
+local camLockEnabledDaHood = false
+local camLockDistanceDaHood = 100
+
+CamLockSection:AddToggle({
+    Name = "Enable CamLock",
+    Default = false,
+    Callback = function(Value)
+        camLockEnabledDaHood = Value
+        local Player = game.Players.LocalPlayer
+        local Camera = game.Workspace.CurrentCamera
+
+        if Value then
+            local function updateCamLock()
+                while camLockEnabledDaHood do
+                    wait()
+                    local targetPlayer = nil
+                    local closestDistance = camLockDistanceDaHood
+
+                    for _, player in pairs(game.Players:GetPlayers()) do
+                        if player ~= Player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                            local distance = (Camera.CFrame.Position - player.Character.HumanoidRootPart.Position).magnitude
+                            if distance < closestDistance then
+                                closestDistance = distance
+                                targetPlayer = player
+                            end
+                        end
+                    end
+
+                    if targetPlayer then
+                        Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPlayer.Character.HumanoidRootPart.Position)
+                    end
+                end
+            end
+
+            -- Start CamLock logic
+            spawn(updateCamLock)
+        else
+            -- Stop CamLock logic
+            camLockEnabledDaHood = false
+        end
+    end    
+})
+
+CamLockSection:AddSlider({
+    Name = "CamLock Distance",
+    Min = 50,
+    Max = 500,
+    Default = 100,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "Distance",
+    Callback = function(Value)
+        camLockDistanceDaHood = Value
+    end    
+})
+
+-- Adding ESP features to Da Hood tab
+local EspSection = DaHoodTab:AddSection({
+    Name = "ESP"
+})
+
+local function add3DBox(player)
+    local character = player.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        local box = Instance.new("BoxHandleAdornment")
+        box.Adornee = character.HumanoidRootPart
+        box.Size = character.HumanoidRootPart.Size
+        box.Color3 = Color3.fromRGB(255,0,0)
+        box.Transparency = 0.5
+        box.Parent = character
+    end
+end
+
+local function remove3DBoxes()
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if player.Character then
+            for _, child in pairs(player.Character:GetChildren()) do
+                if child:IsA("BoxHandleAdornment") then
+                    child:Destroy()
+                end
+            end
+        end
+    end
+end
+
+EspSection:AddToggle({
+    Name = "Enable 3D Hitboxes",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            for _, player in pairs(game.Players:GetPlayers()) do
+                add3DBox(player)
+            end
+        else
+            remove3DBoxes()
+        end
+    end
+})
+
+EspSection:AddToggle({
+    Name = "Enable Names ESP",
+    Default = false,
+    Callback = function(Value)
+        for _, player in pairs(game.Players:GetPlayers()) do
+            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                if Value then
+                    local billboardGui = Instance.new("BillboardGui")
+                    billboardGui.Adornee = player.Character.HumanoidRootPart
+                    billboardGui.Size = UDim2.new(0, 200, 0, 50)
+                    billboardGui.StudsOffset = Vector3.new(0, 3, 0)
+                    billboardGui.AlwaysOnTop = true
+                    
+                    local textLabel = Instance.new("TextLabel")
+                    textLabel.Parent = billboardGui
+                    textLabel.BackgroundTransparency = 1
+                    textLabel.Text = player.Name
+                    textLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+                    textLabel.TextStrokeTransparency = 0
+                    textLabel.Size = UDim2.new(1, 0, 1, 0)
+                    
+                    billboardGui.Parent = player.Character
+                end
+            end
+        end
+    end
 })
