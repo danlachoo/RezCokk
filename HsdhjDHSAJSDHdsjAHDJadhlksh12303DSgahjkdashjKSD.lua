@@ -292,6 +292,49 @@ MiscSection:AddSlider({
     end    
 })
 
+MiscSection:AddToggle({
+    Name = "Fast Spin",
+    Default = false,
+    Callback = function(Value)
+        local Player = game.Players.LocalPlayer
+        local Character = Player.Character or Player.CharacterAdded:Wait()
+        local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
+
+        if Value then
+            while wait() do
+                if not Value then break end
+                HumanoidRootPart.CFrame = HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(1000), 0)
+            end
+        end
+    end    
+})
+
+MiscSection:AddToggle({
+    Name = "FPS Boost",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            local function disableEffects()
+                local player = game.Players.LocalPlayer
+                local camera = game.Workspace.CurrentCamera
+
+                -- Disable shadows and other effects
+                camera.ShadowSoftness = 0
+                camera.Bloom.Enabled = false
+                camera.ColorCorrection.Enabled = false
+                camera.DepthOfField.Enabled = false
+                camera.Skybox = nil
+                game.Lighting.GlobalShadows = false
+            end
+
+            disableEffects()
+        else
+            -- Restore original settings (optional)
+            -- Example: Enable shadows, bloom, etc.
+        end
+    end    
+})
+
 -- Adding Da Hood tab
 local DaHoodTab = Window:MakeTab({
     Name = "Da Hood",
@@ -364,44 +407,6 @@ local EspSection = DaHoodTab:AddSection({
     Name = "ESP"
 })
 
-local function add3DBox(player)
-    local character = player.Character
-    if character and character:FindFirstChild("HumanoidRootPart") then
-        local box = Instance.new("BoxHandleAdornment")
-        box.Adornee = character.HumanoidRootPart
-        box.Size = character.HumanoidRootPart.Size
-        box.Color3 = Color3.fromRGB(255,0,0)
-        box.Transparency = 0.5
-        box.Parent = character
-    end
-end
-
-local function remove3DBoxes()
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if player.Character then
-            for _, child in pairs(player.Character:GetChildren()) do
-                if child:IsA("BoxHandleAdornment") then
-                    child:Destroy()
-                end
-            end
-        end
-    end
-end
-
-EspSection:AddToggle({
-    Name = "Enable 3D Hitboxes",
-    Default = false,
-    Callback = function(Value)
-        if Value then
-            for _, player in pairs(game.Players:GetPlayers()) do
-                add3DBox(player)
-            end
-        else
-            remove3DBoxes()
-        end
-    end
-})
-
 EspSection:AddToggle({
     Name = "Enable Names ESP",
     Default = false,
@@ -409,23 +414,61 @@ EspSection:AddToggle({
         for _, player in pairs(game.Players:GetPlayers()) do
             if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                 if Value then
-                    local billboardGui = Instance.new("BillboardGui")
-                    billboardGui.Adornee = player.Character.HumanoidRootPart
-                    billboardGui.Size = UDim2.new(0, 200, 0, 50)
-                    billboardGui.StudsOffset = Vector3.new(0, 3, 0)
-                    billboardGui.AlwaysOnTop = true
-                    
-                    local textLabel = Instance.new("TextLabel")
-                    textLabel.Parent = billboardGui
-                    textLabel.BackgroundTransparency = 1
-                    textLabel.Text = player.Name
-                    textLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-                    textLabel.TextStrokeTransparency = 0
-                    textLabel.Size = UDim2.new(1, 0, 1, 0)
-                    
-                    billboardGui.Parent = player.Character
+                    local billboardGui = player.Character:FindFirstChildOfClass("BillboardGui")
+                    if not billboardGui then
+                        billboardGui = Instance.new("BillboardGui")
+                        billboardGui.Adornee = player.Character.HumanoidRootPart
+                        billboardGui.Size = UDim2.new(0, 200, 0, 50)
+                        billboardGui.StudsOffset = Vector3.new(0, 3, 0)
+                        billboardGui.AlwaysOnTop = true
+
+                        local textLabel = Instance.new("TextLabel")
+                        textLabel.Parent = billboardGui
+                        textLabel.BackgroundTransparency = 1
+                        textLabel.Text = player.Name
+                        textLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+                        textLabel.TextStrokeTransparency = 0
+                        textLabel.Size = UDim2.new(1, 0, 1, 0)
+
+                        billboardGui.Parent = player.Character
+                    end
+                else
+                    local billboardGui = player.Character:FindFirstChildOfClass("BillboardGui")
+                    if billboardGui then
+                        billboardGui:Destroy()
+                    end
                 end
             end
         end
     end
 })
+
+-- Add information for weapons and health
+local InfoSection = DaHoodTab:AddSection({
+    Name = "Player Info"
+})
+
+InfoSection:AddLabel({
+    Name = "Weapon",
+    Callback = function()
+        local Player = game.Players.LocalPlayer
+        local weapon = "None"
+        if Player.Character and Player.Character:FindFirstChildOfClass("Tool") then
+            weapon = Player.Character:FindFirstChildOfClass("Tool").Name
+        end
+        return "Weapon: " .. weapon
+    end
+})
+
+InfoSection:AddLabel({
+    Name = "Health",
+    Callback = function()
+        local Player = game.Players.LocalPlayer
+        local health = 0
+        if Player.Character and Player.Character:FindFirstChild("Humanoid") then
+            health = Player.Character.Humanoid.Health
+        end
+        return "Health: " .. health
+    end
+})
+
