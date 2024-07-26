@@ -237,7 +237,6 @@ local MiscSection = MiscTab:AddSection({
 })
 
 local camLockEnabled = false
-local camLockDistance = 100
 
 MiscSection:AddToggle({
     Name = "Enable CamLock",
@@ -248,11 +247,12 @@ MiscSection:AddToggle({
         local Camera = game.Workspace.CurrentCamera
 
         if Value then
+            -- CamLock logic here
             local function updateCamLock()
                 while camLockEnabled do
                     wait()
                     local targetPlayer = nil
-                    local closestDistance = camLockDistance
+                    local closestDistance = math.huge
 
                     for _, player in pairs(game.Players:GetPlayers()) do
                         if player ~= Player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
@@ -278,197 +278,3 @@ MiscSection:AddToggle({
         end
     end    
 })
-
-MiscSection:AddSlider({
-    Name = "CamLock Distance",
-    Min = 50,
-    Max = 500,
-    Default = 100,
-    Color = Color3.fromRGB(255,255,255),
-    Increment = 1,
-    ValueName = "Distance",
-    Callback = function(Value)
-        camLockDistance = Value
-    end    
-})
-
-MiscSection:AddToggle({
-    Name = "Fast Spin",
-    Default = false,
-    Callback = function(Value)
-        local Player = game.Players.LocalPlayer
-        local Character = Player.Character or Player.CharacterAdded:Wait()
-        local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
-
-        if Value then
-            while wait() do
-                if not Value then break end
-                HumanoidRootPart.CFrame = HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(1000), 0)
-            end
-        end
-    end    
-})
-
-MiscSection:AddToggle({
-    Name = "FPS Boost",
-    Default = false,
-    Callback = function(Value)
-        if Value then
-            local function disableEffects()
-                local player = game.Players.LocalPlayer
-                local camera = game.Workspace.CurrentCamera
-
-                -- Disable shadows and other effects
-                camera.ShadowSoftness = 0
-                camera.Bloom.Enabled = false
-                camera.ColorCorrection.Enabled = false
-                camera.DepthOfField.Enabled = false
-                camera.Skybox = nil
-                game.Lighting.GlobalShadows = false
-            end
-
-            disableEffects()
-        else
-            -- Restore original settings (optional)
-            -- Example: Enable shadows, bloom, etc.
-        end
-    end    
-})
-
--- Adding Da Hood tab
-local DaHoodTab = Window:MakeTab({
-    Name = "Da Hood",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
-local CamLockSection = DaHoodTab:AddSection({
-    Name = "CamLock"
-})
-
-local camLockEnabledDaHood = false
-local camLockDistanceDaHood = 100
-
-CamLockSection:AddToggle({
-    Name = "Enable CamLock",
-    Default = false,
-    Callback = function(Value)
-        camLockEnabledDaHood = Value
-        local Player = game.Players.LocalPlayer
-        local Camera = game.Workspace.CurrentCamera
-
-        if Value then
-            local function updateCamLock()
-                while camLockEnabledDaHood do
-                    wait()
-                    local targetPlayer = nil
-                    local closestDistance = camLockDistanceDaHood
-
-                    for _, player in pairs(game.Players:GetPlayers()) do
-                        if player ~= Player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                            local distance = (Camera.CFrame.Position - player.Character.HumanoidRootPart.Position).magnitude
-                            if distance < closestDistance then
-                                closestDistance = distance
-                                targetPlayer = player
-                            end
-                        end
-                    end
-
-                    if targetPlayer then
-                        Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPlayer.Character.HumanoidRootPart.Position)
-                    end
-                end
-            end
-
-            -- Start CamLock logic
-            spawn(updateCamLock)
-        else
-            -- Stop CamLock logic
-            camLockEnabledDaHood = false
-        end
-    end    
-})
-
-CamLockSection:AddSlider({
-    Name = "CamLock Distance",
-    Min = 50,
-    Max = 500,
-    Default = 100,
-    Color = Color3.fromRGB(255,255,255),
-    Increment = 1,
-    ValueName = "Distance",
-    Callback = function(Value)
-        camLockDistanceDaHood = Value
-    end    
-})
-
--- Adding ESP features to Da Hood tab
-local EspSection = DaHoodTab:AddSection({
-    Name = "ESP"
-})
-
-EspSection:AddToggle({
-    Name = "Enable Names ESP",
-    Default = false,
-    Callback = function(Value)
-        for _, player in pairs(game.Players:GetPlayers()) do
-            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                if Value then
-                    local billboardGui = player.Character:FindFirstChildOfClass("BillboardGui")
-                    if not billboardGui then
-                        billboardGui = Instance.new("BillboardGui")
-                        billboardGui.Adornee = player.Character.HumanoidRootPart
-                        billboardGui.Size = UDim2.new(0, 200, 0, 50)
-                        billboardGui.StudsOffset = Vector3.new(0, 3, 0)
-                        billboardGui.AlwaysOnTop = true
-
-                        local textLabel = Instance.new("TextLabel")
-                        textLabel.Parent = billboardGui
-                        textLabel.BackgroundTransparency = 1
-                        textLabel.Text = player.Name
-                        textLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-                        textLabel.TextStrokeTransparency = 0
-                        textLabel.Size = UDim2.new(1, 0, 1, 0)
-
-                        billboardGui.Parent = player.Character
-                    end
-                else
-                    local billboardGui = player.Character:FindFirstChildOfClass("BillboardGui")
-                    if billboardGui then
-                        billboardGui:Destroy()
-                    end
-                end
-            end
-        end
-    end
-})
-
--- Add information for weapons and health
-local InfoSection = DaHoodTab:AddSection({
-    Name = "Player Info"
-})
-
-InfoSection:AddLabel({
-    Name = "Weapon",
-    Callback = function()
-        local Player = game.Players.LocalPlayer
-        local weapon = "None"
-        if Player.Character and Player.Character:FindFirstChildOfClass("Tool") then
-            weapon = Player.Character:FindFirstChildOfClass("Tool").Name
-        end
-        return "Weapon: " .. weapon
-    end
-})
-
-InfoSection:AddLabel({
-    Name = "Health",
-    Callback = function()
-        local Player = game.Players.LocalPlayer
-        local health = 0
-        if Player.Character and Player.Character:FindFirstChild("Humanoid") then
-            health = Player.Character.Humanoid.Health
-        end
-        return "Health: " .. health
-    end
-})
-
