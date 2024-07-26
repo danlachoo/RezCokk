@@ -20,6 +20,68 @@ local LT2 = Window:MakeTab({
     PremiumOnly = false
 })
 
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local torso = character:WaitForChild("HumanoidRootPart")
+
+-- Toggle variable
+local isFlying = false
+
+-- Tween parameters
+local tweenInfo = TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut, -1, true)
+local tweenRotationInfo = TweenInfo.new(3, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true)
+
+local flyTweenGoals = {
+    Position = UDim2.new(0, torso.Position.X, 0, torso.Position.Y + 5) -- Hovering 5 studs above
+}
+
+local rotateTweenGoals = {
+    CFrame = torso.CFrame * CFrame.Angles(0, math.rad(360), 0) -- Rotating around Y-axis
+}
+
+local flyTween = TweenService:Create(torso, tweenInfo, flyTweenGoals)
+local rotateTween = TweenService:Create(torso, tweenRotationInfo, rotateTweenGoals)
+
+local function startFlying()
+    if not isFlying then
+        isFlying = true
+        flyTween:Play()
+        rotateTween:Play()
+        humanoid.Sit = false
+    end
+end
+
+local function stopFlying()
+    if isFlying then
+        isFlying = false
+        flyTween:Stop()
+        rotateTween:Stop()
+        humanoid.Sit = false
+    end
+end
+
+-- Create a toggle button
+Tab:AddToggle({
+    Name = "Fly Toggle",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            startFlying()
+        else
+            stopFlying()
+        end
+    end    
+})
+
+-- Ensure the character starts in a default seated position if needed
+humanoid.Sit = false
+
+
 local SectionShops = LT2:AddSection({
     Name = "Shops"
 })
