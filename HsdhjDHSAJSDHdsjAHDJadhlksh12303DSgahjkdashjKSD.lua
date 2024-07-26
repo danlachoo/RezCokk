@@ -151,9 +151,9 @@ SectionPlayer:AddSlider({
 
 SectionPlayer:AddSlider({
     Name = "Field of View",
-    Min = 70,
+    Min = 90,
     Max = 120,
-    Default = 70,
+    Default = 90,
     Color = Color3.fromRGB(255,255,255),
     Increment = 1,
     ValueName = "FOV",
@@ -222,5 +222,59 @@ SectionCFrameFly:AddSlider({
     ValueName = "Speed",
     Callback = function(Value)
         FlySpeed = Value
+    end    
+})
+
+-- Adding the Misc tab
+local MiscTab = Window:MakeTab({
+    Name = "Misc",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local MiscSection = MiscTab:AddSection({
+    Name = "CamLock"
+})
+
+local camLockEnabled = false
+
+MiscSection:AddToggle({
+    Name = "Enable CamLock",
+    Default = false,
+    Callback = function(Value)
+        camLockEnabled = Value
+        local Player = game.Players.LocalPlayer
+        local Camera = game.Workspace.CurrentCamera
+
+        if Value then
+            -- CamLock logic here
+            local function updateCamLock()
+                while camLockEnabled do
+                    wait()
+                    local targetPlayer = nil
+                    local closestDistance = math.huge
+
+                    for _, player in pairs(game.Players:GetPlayers()) do
+                        if player ~= Player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                            local distance = (Camera.CFrame.Position - player.Character.HumanoidRootPart.Position).magnitude
+                            if distance < closestDistance then
+                                closestDistance = distance
+                                targetPlayer = player
+                            end
+                        end
+                    end
+
+                    if targetPlayer then
+                        Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPlayer.Character.HumanoidRootPart.Position)
+                    end
+                end
+            end
+
+            -- Start CamLock logic
+            spawn(updateCamLock)
+        else
+            -- Stop CamLock logic
+            camLockEnabled = false
+        end
     end    
 })
