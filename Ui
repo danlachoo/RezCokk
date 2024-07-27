@@ -42,19 +42,27 @@ end
 function UIHelper.createWindow(name)
     local windowFrame = Instance.new("Frame")
     windowFrame.Name = name .. "Window"
-    windowFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    windowFrame.Position = UDim2.new(0.25, 0, 0.25, 0)
-    windowFrame.Size = UDim2.new(0.5, 0, 0.5, 0)
+    windowFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    windowFrame.Position = UDim2.new(0.262, 0, 0.213, 0)
+    windowFrame.Size = UDim2.new(0, 645, 0, 356)
 
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Name = "TitleLabel"
     titleLabel.Parent = windowFrame
     titleLabel.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-    titleLabel.Size = UDim2.new(1, 0, 0.2, 0)
-    titleLabel.Font = Enum.Font.SourceSans
+    titleLabel.Size = UDim2.new(0, 200, 0, 50)
+    titleLabel.Position = UDim2.new(0.057, 0, 0, 0)
+    titleLabel.Font = Enum.Font.SourceSansBold
     titleLabel.Text = name
     titleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
     titleLabel.TextScaled = true
+
+    local icon = Instance.new("ImageLabel")
+    icon.Name = "Icon"
+    icon.Parent = windowFrame
+    icon.Size = UDim2.new(0, 52, 0, 52)
+    icon.Position = UDim2.new(0, 0, 0, 0)
+    icon.Image = "rbxassetid://18663149111"
 
     return windowFrame
 end
