@@ -15,15 +15,15 @@ function UI_Module.CreateUI(parent, params)
     MainFrame.Draggable = true  -- Делаем фрейм перетаскиваемым
     MainFrame.Parent = ScreenGui
 
-    -- Настройка ImageLabel
+    -- Настройка ImageLabel для основной иконки
     local ImageLabel = Instance.new("ImageLabel")
     ImageLabel.Size = UDim2.new(0, 52, 0, 52)
     ImageLabel.Position = UDim2.new(0, 0, 0, 0)
-    ImageLabel.Image = "rbxassetid://18663149111"
+    ImageLabel.Image = "rbxassetid://" .. tostring(params.Icon or 18663149111)
     ImageLabel.BackgroundTransparency = 1  -- Убираем задний фон
     ImageLabel.Parent = MainFrame
 
-    -- Настройка TextLabel
+    -- Настройка TextLabel для основного текста
     local TextLabel = Instance.new("TextLabel")
     TextLabel.Size = UDim2.new(0, 200, 0, 50)
     TextLabel.Position = UDim2.new(0.057, 0, 0, 0)
@@ -37,14 +37,13 @@ function UI_Module.CreateUI(parent, params)
     -- Настройка кнопки закрытия
     local CloseButton = Instance.new("TextButton")
     CloseButton.Size = UDim2.new(0, 32, 0, 32)
-    CloseButton.Position = UDim2.new(0.961, 0, 0, 0)
+    CloseButton.Position = UDim2.new(0.969, 0, 0, 0)
     CloseButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
     CloseButton.TextScaled = true
     CloseButton.Font = Enum.Font.SourceSansBold
     CloseButton.Text = "X"
     CloseButton.TextColor3 = Color3.new(1, 1, 1)
     CloseButton.Parent = MainFrame
-    ImageLabel.BackgroundTransparency = 1  -- Убираем задний фон
 
     -- Закрытие окна при нажатии на кнопку
     CloseButton.MouseButton1Click:Connect(function()
@@ -89,6 +88,36 @@ function UI_Module.CreateUI(parent, params)
     MainFrame.InputBegan:Connect(onInputBegan)
     MainFrame.InputChanged:Connect(onInputChanged)
     game:GetService("UserInputService").InputChanged:Connect(update)
+
+    -- Добавление дополнительного интро текста и иконки, если указаны
+    if params.IntroText or params.IntroIcon then
+        local IntroFrame = Instance.new("Frame")
+        IntroFrame.Size = UDim2.new(1, 0, 0.3, 0)
+        IntroFrame.Position = UDim2.new(0, 0, 0.7, 0)
+        IntroFrame.BackgroundTransparency = 1
+        IntroFrame.Parent = MainFrame
+
+        if params.IntroIcon then
+            local IntroIcon = Instance.new("ImageLabel")
+            IntroIcon.Size = UDim2.new(0, 52, 0, 52)
+            IntroIcon.Position = UDim2.new(0.1, 0, 0.2, 0)
+            IntroIcon.Image = "rbxassetid://" .. tostring(params.IntroIcon)
+            IntroIcon.BackgroundTransparency = 1
+            IntroIcon.Parent = IntroFrame
+        end
+
+        if params.IntroText then
+            local IntroText = Instance.new("TextLabel")
+            IntroText.Size = UDim2.new(0.8, 0, 0.5, 0)
+            IntroText.Position = UDim2.new(0.2, 0, 0.25, 0)
+            IntroText.BackgroundTransparency = 1
+            IntroText.TextScaled = true
+            IntroText.Font = Enum.Font.SourceSansBold
+            IntroText.Text = params.IntroText
+            IntroText.TextColor3 = Color3.new(1, 1, 1)
+            IntroText.Parent = IntroFrame
+        end
+    end
 
     return ScreenGui
 end
