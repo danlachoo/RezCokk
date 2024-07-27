@@ -2,7 +2,7 @@
 
 local UI_Module = {}
 
-function UI_Module.CreateUI(parent)
+function UI_Module.CreateUI(parent, window)
     -- Создание основного фрейма
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Parent = parent
@@ -18,6 +18,7 @@ function UI_Module.CreateUI(parent)
     ImageLabel.Size = UDim2.new(0, 52, 0, 52)
     ImageLabel.Position = UDim2.new(0, 0, 0, 0)
     ImageLabel.Image = "rbxassetid://18663149111"
+    ImageLabel.BackgroundTransparency = 1  -- Убираем задний фон
     ImageLabel.Parent = MainFrame
 
     -- Настройка TextLabel
@@ -27,7 +28,7 @@ function UI_Module.CreateUI(parent)
     TextLabel.BackgroundTransparency = 1
     TextLabel.TextScaled = true
     TextLabel.Font = Enum.Font.SourceSansBold
-    TextLabel.Text = "Your Text Here"
+    TextLabel.Text = window.name or "Your Text Here"  -- Используем имя из таблицы window
     TextLabel.TextColor3 = Color3.new(1, 1, 1)
     TextLabel.Parent = MainFrame
 
