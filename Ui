@@ -1,43 +1,6 @@
 -- UIHelper.lua
 local UIHelper = {}
 
--- Функция для создания вкладки
-function UIHelper.createTab(name, premiumStatus)
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = name .. "UI"
-    screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-
-    local mainFrame = Instance.new("Frame")
-    mainFrame.Name = name .. "Frame"
-    mainFrame.Parent = screenGui
-    mainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    mainFrame.Position = UDim2.new(0.25, 0, 0.25, 0)
-    mainFrame.Size = UDim2.new(0.5, 0, 0.5, 0)
-
-    local tabLabel = Instance.new("TextLabel")
-    tabLabel.Name = "TabLabel"
-    tabLabel.Parent = mainFrame
-    tabLabel.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-    tabLabel.Size = UDim2.new(1, 0, 0.2, 0)
-    tabLabel.Font = Enum.Font.SourceSans
-    tabLabel.Text = name
-    tabLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
-    tabLabel.TextScaled = true
-
-    local premiumLabel = Instance.new("TextLabel")
-    premiumLabel.Name = "PremiumLabel"
-    premiumLabel.Parent = mainFrame
-    premiumLabel.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-    premiumLabel.Position = UDim2.new(0, 0, 0.2, 0)
-    premiumLabel.Size = UDim2.new(1, 0, 0.2, 0)
-    premiumLabel.Font = Enum.Font.SourceSans
-    premiumLabel.Text = "Premium: " .. (premiumStatus or "No")
-    premiumLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
-    premiumLabel.TextScaled = true
-
-    return screenGui
-end
-
 -- Функция для создания окна
 function UIHelper.createWindow(name)
     local windowFrame = Instance.new("Frame")
@@ -45,11 +8,12 @@ function UIHelper.createWindow(name)
     windowFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
     windowFrame.Position = UDim2.new(0.262, 0, 0.213, 0)
     windowFrame.Size = UDim2.new(0, 645, 0, 356)
+    windowFrame.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Name = "TitleLabel"
     titleLabel.Parent = windowFrame
-    titleLabel.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+    titleLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     titleLabel.Size = UDim2.new(0, 200, 0, 50)
     titleLabel.Position = UDim2.new(0.057, 0, 0, 0)
     titleLabel.Font = Enum.Font.SourceSansBold
