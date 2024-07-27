@@ -1,8 +1,8 @@
--- ModuleScript
+-- ModuleScript (Ui)
 
 local UI_Module = {}
 
-function UI_Module.CreateUI(parent, window)
+function UI_Module.CreateUI(parent, params)
     -- Создание основного фрейма
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Parent = parent
@@ -28,7 +28,7 @@ function UI_Module.CreateUI(parent, window)
     TextLabel.BackgroundTransparency = 1
     TextLabel.TextScaled = true
     TextLabel.Font = Enum.Font.SourceSansBold
-    TextLabel.Text = window.name or "Your Text Here"  -- Используем имя из таблицы window
+    TextLabel.Text = params.name or "Your Text Here"  -- Используем имя из переданных параметров
     TextLabel.TextColor3 = Color3.new(1, 1, 1)
     TextLabel.Parent = MainFrame
 
