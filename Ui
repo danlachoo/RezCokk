@@ -1,54 +1,37 @@
--- UIHelper.lua
-local UIHelper = {}
+-- ModuleScript
 
--- Функция для создания окна
-function UIHelper.createWindow(name)
-    local windowFrame = Instance.new("Frame")
-    windowFrame.Name = name .. "Window"
-    windowFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-    windowFrame.Position = UDim2.new(0.262, 0, 0.213, 0)
-    windowFrame.Size = UDim2.new(0, 645, 0, 356)
-    windowFrame.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+local UI_Module = {}
 
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Name = "TitleLabel"
-    titleLabel.Parent = windowFrame
-    titleLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    titleLabel.Size = UDim2.new(0, 200, 0, 50)
-    titleLabel.Position = UDim2.new(0.057, 0, 0, 0)
-    titleLabel.Font = Enum.Font.SourceSansBold
-    titleLabel.Text = name
-    titleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
-    titleLabel.TextScaled = true
+function UI_Module.CreateUI(parent)
+    -- Создание основного фрейма
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Parent = parent
 
-    local icon = Instance.new("ImageLabel")
-    icon.Name = "Icon"
-    icon.Parent = windowFrame
-    icon.Size = UDim2.new(0, 52, 0, 52)
-    icon.Position = UDim2.new(0, 0, 0, 0)
-    icon.Image = "rbxassetid://18663149111"
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Size = UDim2.new(0, 645, 0, 356)
+    MainFrame.Position = UDim2.new(0.262, 0, 0.213, 0)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    MainFrame.Parent = ScreenGui
 
-    return windowFrame
+    -- Настройка ImageLabel
+    local ImageLabel = Instance.new("ImageLabel")
+    ImageLabel.Size = UDim2.new(0, 52, 0, 52)
+    ImageLabel.Position = UDim2.new(0, 0, 0, 0)
+    ImageLabel.Image = "rbxassetid://18663149111"
+    ImageLabel.Parent = MainFrame
+
+    -- Настройка TextLabel
+    local TextLabel = Instance.new("TextLabel")
+    TextLabel.Size = UDim2.new(0, 200, 0, 50)
+    TextLabel.Position = UDim2.new(0.057, 0, 0, 0)
+    TextLabel.BackgroundTransparency = 1
+    TextLabel.TextScaled = true
+    TextLabel.Font = Enum.Font.SourceSansBold
+    TextLabel.Text = "Your Text Here"
+    TextLabel.TextColor3 = Color3.new(1, 1, 1)
+    TextLabel.Parent = MainFrame
+
+    return ScreenGui
 end
 
--- Функция для создания кнопки
-function UIHelper.createButton(name, parent, onClick)
-    local button = Instance.new("TextButton")
-    button.Name = name .. "Button"
-    button.Parent = parent
-    button.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-    button.Size = UDim2.new(0.3, 0, 0.1, 0)
-    button.Position = UDim2.new(0.35, 0, 0.6, 0)
-    button.Font = Enum.Font.SourceSans
-    button.Text = name
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.TextScaled = true
-
-    if onClick then
-        button.MouseButton1Click:Connect(onClick)
-    end
-
-    return button
-end
-
-return UIHelper
+return UI_Module
