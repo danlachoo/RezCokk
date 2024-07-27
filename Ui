@@ -37,13 +37,14 @@ function UI_Module.CreateUI(parent, params)
     -- Настройка кнопки закрытия
     local CloseButton = Instance.new("TextButton")
     CloseButton.Size = UDim2.new(0, 32, 0, 32)
-    CloseButton.Position = UDim2.new(0.969, 0, 0, 0)
+    CloseButton.Position = UDim2.new(0.961, 0, 0, 0)
     CloseButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
     CloseButton.TextScaled = true
     CloseButton.Font = Enum.Font.SourceSansBold
     CloseButton.Text = "X"
     CloseButton.TextColor3 = Color3.new(1, 1, 1)
     CloseButton.Parent = MainFrame
+    ImageLabel.BackgroundTransparency = 1  -- Убираем задний фон
 
     -- Закрытие окна при нажатии на кнопку
     CloseButton.MouseButton1Click:Connect(function()
