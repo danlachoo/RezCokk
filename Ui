@@ -11,6 +11,8 @@ function UI_Module.CreateUI(parent, params)
     MainFrame.Size = UDim2.new(0, 645, 0, 356)
     MainFrame.Position = UDim2.new(0.262, 0, 0.213, 0)
     MainFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    MainFrame.Active = true  -- Делаем фрейм активным для перетаскивания
+    MainFrame.Draggable = true  -- Делаем фрейм перетаскиваемым
     MainFrame.Parent = ScreenGui
 
     -- Настройка ImageLabel
@@ -31,6 +33,61 @@ function UI_Module.CreateUI(parent, params)
     TextLabel.Text = params.name or "Your Text Here"  -- Используем имя из переданных параметров
     TextLabel.TextColor3 = Color3.new(1, 1, 1)
     TextLabel.Parent = MainFrame
+
+    -- Настройка кнопки закрытия
+    local CloseButton = Instance.new("TextButton")
+    CloseButton.Size = UDim2.new(0, 32, 0, 32)
+    CloseButton.Position = UDim2.new(0.969, 0, 0, 0)
+    CloseButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    CloseButton.TextScaled = true
+    CloseButton.Font = Enum.Font.SourceSansBold
+    CloseButton.Text = "X"
+    CloseButton.TextColor3 = Color3.new(1, 1, 1)
+    CloseButton.Parent = MainFrame
+
+    -- Закрытие окна при нажатии на кнопку
+    CloseButton.MouseButton1Click:Connect(function()
+        ScreenGui:Destroy()
+    end)
+
+    -- Переменные для перетаскивания
+    local dragging = false
+    local dragInput, mousePos, framePos
+
+    -- Функция для начала перетаскивания
+    local function onInputBegan(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            mousePos = input.Position
+            framePos = MainFrame.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end
+
+    -- Функция для перетаскивания
+    local function onInputChanged(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end
+
+    -- Функция для обновления позиции при перетаскивании
+    local function update(input)
+        if dragging then
+            local delta = input.Position - mousePos
+            MainFrame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
+        end
+    end
+
+    -- Подключение функций к событиям
+    MainFrame.InputBegan:Connect(onInputBegan)
+    MainFrame.InputChanged:Connect(onInputChanged)
+    game:GetService("UserInputService").InputChanged:Connect(update)
 
     return ScreenGui
 end
