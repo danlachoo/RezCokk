@@ -20,6 +20,12 @@ local LT2 = Window:MakeTab({
     PremiumOnly = false
 })
 
+local MiscTab = Window:MakeTab({
+    Name = "Misc",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
 local screenGui = Instance.new("ScreenGui", game.Players.LocalPlayer:WaitForChild("PlayerGui"))
 local TweenService = game:GetService("TweenService")
 
@@ -277,12 +283,6 @@ Tab:AddSlider({
     end    
 })
 
-local MiscTab = Window:MakeTab({
-    Name = "Misc",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
 MiscTab:AddToggle({
     Name = "Enable CamLock",
     Default = false,
@@ -323,3 +323,97 @@ MiscTab:AddToggle({
         end
     end    
 })
+
+-- Record Tool Variables
+local recording = false
+local replaying = false
+local recordedPositions = {}
+local recordStartTime = 0
+
+-- Timer Function
+local function startTimer(duration)
+    local startTime = tick()
+    while tick() - startTime < duration do
+        wait(1)
+        createNotification("Timer", tostring(math.floor(duration - (tick() - startTime))) .. " seconds remaining")
+    end
+    createNotification("Timer", "Time's up!")
+end
+
+-- Record Tool Buttons
+MiscTab:AddButton({
+    Name = "Start Recording",
+    Callback = function()
+        if not recording then
+            recording = true
+            recordedPositions = {}
+            recordStartTime = tick()
+            createNotification("Record", "Recording started")
+        else
+            createNotification("Record", "Already recording")
+        end
+    end
+})
+
+MiscTab:AddButton({
+    Name = "Stop Recording",
+    Callback = function()
+        if recording then
+            recording = false
+            createNotification("Record", "Recording stopped")
+        else
+            createNotification("Record", "Not recording")
+        end
+    end
+})
+
+MiscTab:AddButton({
+    Name = "Save Recording",
+    Callback = function()
+        if #recordedPositions > 0 then
+            -- Save the recording to a file or datastore (this part can vary based on the platform)
+            -- For demonstration, we'll just create a notification
+            createNotification("Record", "Recording saved")
+        else
+            createNotification("Record", "No recording to save")
+        end
+    end
+})
+
+MiscTab:AddButton({
+    Name = "Play Recording",
+    Callback = function()
+        if not replaying and #recordedPositions > 0 then
+            replaying = true
+            createNotification("Record", "Replaying recording")
+            for _, posData in pairs(recordedPositions) do
+                if replaying then
+                    local elapsedTime = tick() - recordStartTime
+                    if elapsedTime < posData.time then
+                        wait(posData.time - elapsedTime)
+                    end
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = posData.cframe
+                end
+            end
+            replaying = false
+            createNotification("Record", "Replay finished")
+        else
+            createNotification("Record", "No recording to play or already replaying")
+        end
+    end
+})
+
+-- Timer Button
+MiscTab:AddButton({
+    Name = "Start 10 Seconds Timer",
+    Callback = function()
+        startTimer(10)
+    end
+})
+
+-- Update Recorded Positions
+game:GetService("RunService").Stepped:Connect(function()
+    if recording then
+        table.insert(recordedPositions, {time = tick() - recordStartTime, cframe = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame})
+    end
+end)
