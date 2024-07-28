@@ -184,6 +184,45 @@ LT2:AddButton({
     end
 })
 
+-- Добавляем кнопку для телепортации и перезагрузки слота в LT2 вкладку
+LT2:AddButton({
+    Name = "Teleport and Reload Slot",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local slotNumber = 2  -- Номер слота, который нужно перезагрузить
+
+        -- Функция для сохранения слота
+        local function saveSlot(slot)
+            local saveSlotEvent = game:GetService("ReplicatedStorage"):WaitForChild("LoadSaveRequests"):WaitForChild("RequestSave")
+            saveSlotEvent:InvokeServer(slot)
+        end
+
+        -- Функция для загрузки слота
+        local function loadSlot(slot)
+            local loadSlotEvent = game:GetService("ReplicatedStorage"):WaitForChild("LoadSaveRequests"):WaitForChild("RequestLoad")
+            loadSlotEvent:InvokeServer(slot)
+        end
+
+        -- Перезагрузка слота
+        local function reloadSlot(slot)
+            saveSlot(slot)
+            wait(1)
+            loadSlot(slot)
+        end
+
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            -- Телепортация игрока
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(-2092.05, 365.865, 923.582)
+            createNotification("Teleport", "Teleported to coordinates")
+
+            -- Перезагрузка слота
+            reloadSlot(slotNumber)
+            createNotification("Slot", "Slot reloaded")
+        end
+    end
+})
+
+
 -- Adding features to the Main tab
 Tab:AddSlider({
     Name = "Walkspeed",
