@@ -8,6 +8,64 @@ local Window = OrionLib:MakeWindow({
     ConfigFolder = "RezCokk"
 })
 
+local screenGui = Instance.new("ScreenGui", game.Players.LocalPlayer:WaitForChild("PlayerGui"))
+local TweenService = game:GetService("TweenService")
+
+local function createNotification(title, message)
+    local notificationFrame = Instance.new("Frame", screenGui)
+    local notificationTitle = Instance.new("TextLabel", notificationFrame)
+    local notificationMessage = Instance.new("TextLabel", notificationFrame)
+
+    -- Настройки начальных значений для уведомления
+    notificationFrame.AnchorPoint = Vector2.new(1, 1)
+    notificationFrame.Position = UDim2.new(1, -10, 1, -10)  -- Позиция справа снизу
+    notificationFrame.Size = UDim2.new(0, 200, 0, 60)
+    notificationFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+    notificationFrame.BorderSizePixel = 0
+    notificationFrame.BackgroundTransparency = 0.5
+
+    notificationTitle.Text = title
+    notificationTitle.Size = UDim2.new(1, -10, 0.5, -5)
+    notificationTitle.Position = UDim2.new(0, 5, 0, 5)
+    notificationTitle.BackgroundTransparency = 1
+    notificationTitle.TextColor3 = Color3.new(1, 1, 1)
+    notificationTitle.TextScaled = true
+
+    notificationMessage.Text = message
+    notificationMessage.Size = UDim2.new(1, -10, 0.5, -5)
+    notificationMessage.Position = UDim2.new(0, 5, 0.5, 0)
+    notificationMessage.BackgroundTransparency = 1
+    notificationMessage.TextColor3 = Color3.new(1, 1, 1)
+    notificationMessage.TextScaled = true
+
+    local uiCornerNotification = Instance.new("UICorner", notificationFrame)
+    uiCornerNotification.CornerRadius = UDim.new(0, 10) -- Закругление углов
+
+    -- Создаем tween для появления уведомления
+    local notificationTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local notificationAppearGoals = {BackgroundTransparency = 0.5, Position = UDim2.new(1, -10, 1, -70)}
+    local notificationDisappearGoals = {BackgroundTransparency = 1, Position = UDim2.new(1, -10, 1, -10)}
+
+    local notificationAppearTween = TweenService:Create(notificationFrame, notificationTweenInfo, notificationAppearGoals)
+    local notificationDisappearTween = TweenService:Create(notificationFrame, notificationTweenInfo, notificationDisappearGoals)
+
+    -- Создаем tween для исчезновения текста
+    local textFadeOutGoals = {TextTransparency = 1}
+    local titleFadeOutTween = TweenService:Create(notificationTitle, notificationTweenInfo, textFadeOutGoals)
+    local messageFadeOutTween = TweenService:Create(notificationMessage, notificationTweenInfo, textFadeOutGoals)
+
+    -- Показ уведомления
+    notificationAppearTween:Play()
+    wait(3) -- Уведомление отображается в течение 3 секунд
+    titleFadeOutTween:Play()
+    messageFadeOutTween:Play()
+    notificationDisappearTween:Play()
+
+    notificationDisappearTween.Completed:Connect(function()
+        notificationFrame:Destroy()
+    end)
+end
+
 local Tab = Window:MakeTab({
     Name = "Main",
     Icon = "rbxassetid://4483345998",
@@ -20,68 +78,6 @@ local LT2 = Window:MakeTab({
     PremiumOnly = false
 })
 
-local TweenService = game:GetService("TweenService")
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
-local torso = character:WaitForChild("HumanoidRootPart")
-
--- Toggle variable
-local isFlying = false
-
--- Tween parameters
-local tweenInfo = TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut, -1, true)
-local tweenRotationInfo = TweenInfo.new(3, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true)
-
-local flyTweenGoals = {
-    Position = UDim2.new(0, torso.Position.X, 0, torso.Position.Y + 5) -- Hovering 5 studs above
-}
-
-local rotateTweenGoals = {
-    CFrame = torso.CFrame * CFrame.Angles(0, math.rad(360), 0) -- Rotating around Y-axis
-}
-
-local flyTween = TweenService:Create(torso, tweenInfo, flyTweenGoals)
-local rotateTween = TweenService:Create(torso, tweenRotationInfo, rotateTweenGoals)
-
-local function startFlying()
-    if not isFlying then
-        isFlying = true
-        flyTween:Play()
-        rotateTween:Play()
-        humanoid.Sit = false
-    end
-end
-
-local function stopFlying()
-    if isFlying then
-        isFlying = false
-        flyTween:Stop()
-        rotateTween:Stop()
-        humanoid.Sit = false
-    end
-end
-
--- Create a toggle button
-Tab:AddToggle({
-    Name = "Fly Toggle",
-    Default = false,
-    Callback = function(Value)
-        if Value then
-            startFlying()
-        else
-            stopFlying()
-        end
-    end    
-})
-
--- Ensure the character starts in a default seated position if needed
-humanoid.Sit = false
-
-
 local SectionShops = LT2:AddSection({
     Name = "Shops"
 })
@@ -92,6 +88,7 @@ LT2:AddButton({
         local player = game.Players.LocalPlayer
         if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             player.Character.HumanoidRootPart.CFrame = CFrame.new(259.498, 3.16998, 57.6584)
+            createNotification("Teleport", "Teleported to Wood R Us")
         end
     end
 })
@@ -102,6 +99,7 @@ LT2:AddButton({
         local player = game.Players.LocalPlayer
         if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             player.Character.HumanoidRootPart.CFrame = CFrame.new(273.155, 3.08099, -97.9038)
+            createNotification("Teleport", "Teleported to Land Store")
         end
     end
 })
@@ -112,6 +110,7 @@ LT2:AddButton({
         local player = game.Players.LocalPlayer
         if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             player.Character.HumanoidRootPart.CFrame = CFrame.new(509.9, 3.13624, -1452.15)
+            createNotification("Teleport", "Teleported to Car Shop")
         end
     end
 })
@@ -122,6 +121,7 @@ LT2:AddButton({
         local player = game.Players.LocalPlayer
         if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             player.Character.HumanoidRootPart.CFrame = CFrame.new(498.77, 3.05071, -1729.68)
+            createNotification("Teleport", "Teleported to Furniture Shop")
         end
     end
 })
@@ -132,6 +132,7 @@ LT2:AddButton({
         local player = game.Players.LocalPlayer
         if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             player.Character.HumanoidRootPart.CFrame = CFrame.new(5226.62, -166.177, 718.345)
+            createNotification("Teleport", "Teleported to FineArt Shop")
         end
     end
 })
@@ -142,6 +143,7 @@ LT2:AddButton({
         local player = game.Players.LocalPlayer
         if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             player.Character.HumanoidRootPart.CFrame = CFrame.new(264.61, 8.25245, -2541.67)
+            createNotification("Teleport", "Teleported to Shack Shop")
         end
     end
 })
@@ -156,6 +158,7 @@ LT2:AddButton({
         local player = game.Players.LocalPlayer
         if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             player.Character.HumanoidRootPart.CFrame = CFrame.new(-1090.67, 131.533, -1108.28)
+            createNotification("Teleport", "Teleported to Swamp")
         end
     end
 })
@@ -166,6 +169,7 @@ LT2:AddButton({
         local player = game.Players.LocalPlayer
         if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             player.Character.HumanoidRootPart.CFrame = CFrame.new(-1661.97, 623, 1066.59)
+            createNotification("Teleport", "Teleported to Volcano")
         end
     end
 })
@@ -176,11 +180,11 @@ LT2:AddButton({
         local player = game.Players.LocalPlayer
         if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             player.Character.HumanoidRootPart.CFrame = CFrame.new(1938.3, -5.91243, -1537.41)
+            createNotification("Teleport", "Teleported to Palm")
         end
     end
 })
 
--- Adding features to the Main tab
 local SectionPlayer = Tab:AddSection({
     Name = "Player"
 })
@@ -195,6 +199,7 @@ SectionPlayer:AddSlider({
     ValueName = "Speed",
     Callback = function(Value)
         game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
+        createNotification("Walkspeed", "Walkspeed set to " .. Value)
     end    
 })
 
@@ -208,6 +213,7 @@ SectionPlayer:AddSlider({
     ValueName = "Power",
     Callback = function(Value)
         game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
+        createNotification("Jump Power", "Jump Power set to " .. Value)
     end    
 })
 
@@ -221,6 +227,7 @@ SectionPlayer:AddSlider({
     ValueName = "FOV",
     Callback = function(Value)
         game.Workspace.CurrentCamera.FieldOfView = Value
+        createNotification("Field of View", "Field of View set to " .. Value)
     end    
 })
 
@@ -267,9 +274,11 @@ SectionCFrameFly:AddToggle({
 
             BodyGyro:Destroy()
             BodyVelocity:Destroy()
+            createNotification("Fly", "Flying enabled")
         else
             -- Disable fly logic here
             flying = false
+            createNotification("Fly", "Flying disabled")
         end
     end    
 })
@@ -284,10 +293,10 @@ SectionCFrameFly:AddSlider({
     ValueName = "Speed",
     Callback = function(Value)
         FlySpeed = Value
+        createNotification("Fly Speed", "Fly Speed set to " .. Value)
     end    
 })
 
--- Adding the Misc tab
 local MiscTab = Window:MakeTab({
     Name = "Misc",
     Icon = "rbxassetid://4483345998",
@@ -334,9 +343,11 @@ MiscSection:AddToggle({
 
             -- Start CamLock logic
             spawn(updateCamLock)
+            createNotification("CamLock", "CamLock enabled")
         else
             -- Stop CamLock logic
             camLockEnabled = false
+            createNotification("CamLock", "CamLock disabled")
         end
     end    
 })
