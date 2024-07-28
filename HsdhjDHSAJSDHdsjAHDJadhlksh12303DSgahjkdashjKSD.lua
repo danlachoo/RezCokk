@@ -84,6 +84,10 @@ local function createNotification(title, message)
     end)
 end
 
+local Section = LT2:AddSection({
+	Name = "Shops"
+})
+
 -- Adding features to the LT2 tab
 LT2:AddButton({
     Name = "Wood R us",
@@ -151,6 +155,10 @@ LT2:AddButton({
     end
 })
 
+local Section = LT2:AddSection({
+	Name = "Biomes"
+})
+
 LT2:AddButton({
     Name = "Swamp Location",
     Callback = function()
@@ -184,9 +192,14 @@ LT2:AddButton({
     end
 })
 
+local Section = LT2:AddSection({
+	Name = "Dupe"
+})
+
+
 -- Добавляем кнопку для телепортации и перезагрузки слота в LT2 вкладку
 LT2:AddButton({
-    Name = "Teleport and Reload Slot",
+    Name = "Dupe Axe | Volcano method",
     Callback = function()
         local player = game.Players.LocalPlayer
         local slotNumber = 2  -- Номер слота, который нужно перезагрузить
@@ -211,20 +224,61 @@ LT2:AddButton({
 
         if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             -- Телепортация игрока
-            player.Character.HumanoidRootPart.CFrame = CFrame.new(-2092.05, 365.865, 923.582)
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(-2092.05, 365.865, 943.582)
             createNotification("Teleport", "Teleported to coordinates")
 
             -- Перезагрузка слота
             reloadSlot(slotNumber)
             createNotification("Slot", "Slot reloaded")
+            wait(4)
+            game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
+    character:WaitForChild("Humanoid").Died:Connect(function()
+    end)
+end)
         end
     end
 })
 
+local speed = 0  -- Начальная скорость
 
--- Adding features to the Main tab
+-- Функция для перемещения с использованием CFrame
+local function moveCharacter()
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+
+    if humanoidRootPart then
+        local UserInputService = game:GetService("UserInputService")
+        local RunService = game:GetService("RunService")
+
+        RunService.RenderStepped:Connect(function()
+            if humanoidRootPart then
+                local moveDirection = Vector3.new(0, 0, 0)
+
+                if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+                    moveDirection = moveDirection + humanoidRootPart.CFrame.LookVector
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+                    moveDirection = moveDirection - humanoidRootPart.CFrame.LookVector
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+                    moveDirection = moveDirection - humanoidRootPart.CFrame.RightVector
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+                    moveDirection = moveDirection + humanoidRootPart.CFrame.RightVector
+                end
+
+                if moveDirection.Magnitude > 0 then
+                    humanoidRootPart.CFrame = humanoidRootPart.CFrame + (moveDirection.Unit * speed / 50)
+                end
+            end
+        end)
+    end
+end
+
+-- Добавляем ползунок на вкладку
 Tab:AddSlider({
-    Name = "Walkspeed",
+    Name = "CFrame Speed",
     Min = 0,
     Max = 100,
     Default = 16,
@@ -232,9 +286,12 @@ Tab:AddSlider({
     Increment = 1,
     ValueName = "Speed",
     Callback = function(Value)
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
+        speed = Value
     end    
 })
+
+-- Запускаем функцию перемещения
+moveCharacter()
 
 Tab:AddSlider({
     Name = "Jump Power",
