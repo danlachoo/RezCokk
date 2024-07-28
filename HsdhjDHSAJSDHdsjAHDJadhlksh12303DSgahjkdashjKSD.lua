@@ -206,7 +206,6 @@ LT2:AddButton({
         -- Перезагрузка слота
         local function reloadSlot(slot)
             saveSlot(slot)
-            wait(1)
             loadSlot(slot)
         end
 
