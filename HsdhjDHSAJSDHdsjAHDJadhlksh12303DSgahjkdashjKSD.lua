@@ -8,6 +8,18 @@ local Window = OrionLib:MakeWindow({
     ConfigFolder = "RezCokk"
 })
 
+local Tab = Window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local LT2 = Window:MakeTab({
+    Name = "Lumber Tycoon 2",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
 local screenGui = Instance.new("ScreenGui", game.Players.LocalPlayer:WaitForChild("PlayerGui"))
 local TweenService = game:GetService("TweenService")
 
@@ -66,17 +78,7 @@ local function createNotification(title, message)
     end)
 end
 
-local Tab = Window:MakeTab({
-    Name = "Main",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
 
-local LT2 = Window:MakeTab({
-    Name = "Lumber Tycoon 2",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
 
 local SectionShops = LT2:AddSection({
     Name = "Shops"
@@ -185,6 +187,7 @@ LT2:AddButton({
     end
 })
 
+-- Adding features to the Main tab
 local SectionPlayer = Tab:AddSection({
     Name = "Player"
 })
@@ -199,7 +202,6 @@ SectionPlayer:AddSlider({
     ValueName = "Speed",
     Callback = function(Value)
         game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
-        createNotification("Walkspeed", "Walkspeed set to " .. Value)
     end    
 })
 
@@ -213,7 +215,6 @@ SectionPlayer:AddSlider({
     ValueName = "Power",
     Callback = function(Value)
         game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
-        createNotification("Jump Power", "Jump Power set to " .. Value)
     end    
 })
 
@@ -227,7 +228,6 @@ SectionPlayer:AddSlider({
     ValueName = "FOV",
     Callback = function(Value)
         game.Workspace.CurrentCamera.FieldOfView = Value
-        createNotification("Field of View", "Field of View set to " .. Value)
     end    
 })
 
@@ -274,11 +274,9 @@ SectionCFrameFly:AddToggle({
 
             BodyGyro:Destroy()
             BodyVelocity:Destroy()
-            createNotification("Fly", "Flying enabled")
         else
             -- Disable fly logic here
             flying = false
-            createNotification("Fly", "Flying disabled")
         end
     end    
 })
@@ -293,10 +291,10 @@ SectionCFrameFly:AddSlider({
     ValueName = "Speed",
     Callback = function(Value)
         FlySpeed = Value
-        createNotification("Fly Speed", "Fly Speed set to " .. Value)
     end    
 })
 
+-- Adding the Misc tab
 local MiscTab = Window:MakeTab({
     Name = "Misc",
     Icon = "rbxassetid://4483345998",
@@ -343,11 +341,9 @@ MiscSection:AddToggle({
 
             -- Start CamLock logic
             spawn(updateCamLock)
-            createNotification("CamLock", "CamLock enabled")
         else
             -- Stop CamLock logic
             camLockEnabled = false
-            createNotification("CamLock", "CamLock disabled")
         end
     end    
 })
