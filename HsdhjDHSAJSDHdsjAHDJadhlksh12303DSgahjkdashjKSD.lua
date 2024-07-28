@@ -78,12 +78,7 @@ local function createNotification(title, message)
     end)
 end
 
-
-
-local SectionShops = LT2:AddSection({
-    Name = "Shops"
-})
-
+-- Adding features to the LT2 tab
 LT2:AddButton({
     Name = "Wood R us",
     Callback = function()
@@ -150,10 +145,6 @@ LT2:AddButton({
     end
 })
 
-local SectionBiomes = LT2:AddSection({
-    Name = "Biomes"
-})
-
 LT2:AddButton({
     Name = "Swamp Location",
     Callback = function()
@@ -188,11 +179,7 @@ LT2:AddButton({
 })
 
 -- Adding features to the Main tab
-local SectionPlayer = Tab:AddSection({
-    Name = "Player"
-})
-
-SectionPlayer:AddSlider({
+Tab:AddSlider({
     Name = "Walkspeed",
     Min = 0,
     Max = 100,
@@ -205,7 +192,7 @@ SectionPlayer:AddSlider({
     end    
 })
 
-SectionPlayer:AddSlider({
+Tab:AddSlider({
     Name = "Jump Power",
     Min = 0,
     Max = 200,
@@ -218,7 +205,7 @@ SectionPlayer:AddSlider({
     end    
 })
 
-SectionPlayer:AddSlider({
+Tab:AddSlider({
     Name = "Field of View",
     Min = 90,
     Max = 120,
@@ -231,11 +218,7 @@ SectionPlayer:AddSlider({
     end    
 })
 
-local SectionCFrameFly = Tab:AddSection({
-    Name = "CFrame Fly"
-})
-
-SectionCFrameFly:AddToggle({
+Tab:AddToggle({
     Name = "Enable Fly",
     Default = false,
     Callback = function(Value)
@@ -247,7 +230,6 @@ SectionCFrameFly:AddToggle({
         if Value then
             -- Fly logic here
             local FlySpeed = 2 -- Change the speed as needed
-            local flying = true
             local BodyGyro = Instance.new("BodyGyro")
             local BodyVelocity = Instance.new("BodyVelocity")
 
@@ -255,33 +237,34 @@ SectionCFrameFly:AddToggle({
             BodyGyro.Parent = HumanoidRootPart
             BodyVelocity.Parent = HumanoidRootPart
 
-            while _G.Fly do
-                wait()
-                HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
-                local Control = {F = 0, B = 0, L = 0, R = 0}
-                local MaxSpeed = FlySpeed
-                local Camera = game.Workspace.CurrentCamera
+            local function fly()
+                while _G.Fly do
+                    wait()
+                    local Control = {F = 0, B = 0, L = 0, R = 0}
+                    local MaxSpeed = FlySpeed
+                    local Camera = game.Workspace.CurrentCamera
 
-                local LookVector = Camera.CFrame.lookVector
-                Control.F = (game.UserInputService:IsKeyDown(Enum.KeyCode.W) and 1 or 0)
-                Control.B = (game.UserInputService:IsKeyDown(Enum.KeyCode.S) and 1 or 0)
-                Control.L = (game.UserInputService:IsKeyDown(Enum.KeyCode.A) and 1 or 0)
-                Control.R = (game.UserInputService:IsKeyDown(Enum.KeyCode.D) and 1 or 0)
+                    local LookVector = Camera.CFrame.lookVector
+                    Control.F = (game.UserInputService:IsKeyDown(Enum.KeyCode.W) and 1 or 0)
+                    Control.B = (game.UserInputService:IsKeyDown(Enum.KeyCode.S) and 1 or 0)
+                    Control.L = (game.UserInputService:IsKeyDown(Enum.KeyCode.A) and 1 or 0)
+                    Control.R = (game.UserInputService:IsKeyDown(Enum.KeyCode.D) and 1 or 0)
 
-                BodyVelocity.Velocity = ((LookVector * (Control.F - Control.B)) + ((Camera.CFrame * CFrame.new(Control.L - Control.R, 0, 0)).p - Camera.CFrame.p)) * MaxSpeed
-                BodyGyro.CFrame = Camera.CFrame
+                    BodyVelocity.Velocity = ((LookVector * (Control.F - Control.B)) + ((Camera.CFrame * CFrame.new(Control.L - Control.R, 0, 0)).p - Camera.CFrame.p)) * MaxSpeed
+                    BodyGyro.CFrame = Camera.CFrame
+                end
             end
-
-            BodyGyro:Destroy()
-            BodyVelocity:Destroy()
+            
+            spawn(fly)
         else
             -- Disable fly logic here
-            flying = false
+            BodyGyro:Destroy()
+            BodyVelocity:Destroy()
         end
     end    
 })
 
-SectionCFrameFly:AddSlider({
+Tab:AddSlider({
     Name = "Fly Speed",
     Min = 1,
     Max = 10,
@@ -290,30 +273,23 @@ SectionCFrameFly:AddSlider({
     Increment = 1,
     ValueName = "Speed",
     Callback = function(Value)
-        FlySpeed = Value
+        _G.FlySpeed = Value
     end    
 })
 
--- Adding the Misc tab
 local MiscTab = Window:MakeTab({
     Name = "Misc",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
-local MiscSection = MiscTab:AddSection({
-    Name = "CamLock"
-})
-
-local camLockEnabled = false
-
-MiscSection:AddToggle({
+MiscTab:AddToggle({
     Name = "Enable CamLock",
     Default = false,
     Callback = function(Value)
-        camLockEnabled = Value
         local Player = game.Players.LocalPlayer
         local Camera = game.Workspace.CurrentCamera
+        local camLockEnabled = Value
 
         if Value then
             -- CamLock logic here
