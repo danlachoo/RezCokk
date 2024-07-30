@@ -107,7 +107,7 @@ end
   	end    
 })
 
-local Section = pL:AddSection({
+local Section = PL:AddSection({
 	Name = "Other"
 })
 
@@ -142,7 +142,7 @@ local function toggleFloating(state)
     end
 end
 
-Tab:AddToggle({
+PL:AddToggle({
     Name = "Float in Air",
     Default = false,
     Callback = function(Value)
