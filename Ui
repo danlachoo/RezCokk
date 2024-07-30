@@ -318,7 +318,8 @@ local function updateCamLock()
                     playerRootPart.CFrame = CFrame.new(targetPosition + Vector3.new(0, 10, 0))
                 elseif attackMethod == "Circle Around" then
                     local radius = 10  -- Adjust the radius as needed
-                    local angle = tick() * math.pi / 4  -- Adjust the speed of rotation
+                    local speed = 2  -- Adjust the speed as needed
+                    local angle = tick() * speed  -- Adjust the speed of rotation
                     local offset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
                     playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
                 end
@@ -416,3 +417,4 @@ UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
         targetPlayer = getClosestPlayer()
     end
 end)
+
