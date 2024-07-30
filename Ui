@@ -1,125 +1,358 @@
--- ModuleScript (Ui)
+local OrionLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Orion/main/source'))()
 
-local UI_Module = {}
+local Window = OrionLib:MakeWindow({
+    Name = "RezCokk",
+    HidePremium = false,
+    IntroText = "RezCokk",
+    SaveConfig = true,
+    ConfigFolder = "RezCokk"
+})
 
-function UI_Module.CreateUI(parent, params)
-    -- Создание основного фрейма
-    local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Parent = parent
+local Tab = Window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
-    local MainFrame = Instance.new("Frame")
-    MainFrame.Size = UDim2.new(0, 645, 0, 356)
-    MainFrame.Position = UDim2.new(0.262, 0, 0.213, 0)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-    MainFrame.Active = true  -- Делаем фрейм активным для перетаскивания
-    MainFrame.Draggable = true  -- Делаем фрейм перетаскиваемым
-    MainFrame.Parent = ScreenGui
+local DH = Window:MakeTab({
+    Name = "Da hood",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
-    -- Настройка ImageLabel для основной иконки
-    local ImageLabel = Instance.new("ImageLabel")
-    ImageLabel.Size = UDim2.new(0, 52, 0, 52)
-    ImageLabel.Position = UDim2.new(0, 0, 0, 0)
-    ImageLabel.Image = "rbxassetid://" .. tostring(params.Icon or 18663149111)
-    ImageLabel.BackgroundTransparency = 1  -- Убираем задний фон
-    ImageLabel.Parent = MainFrame
+local LT2 = Window:MakeTab({
+    Name = "Lumber Tycoon 2",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
-    -- Настройка TextLabel для основного текста
-    local TextLabel = Instance.new("TextLabel")
-    TextLabel.Size = UDim2.new(0, 200, 0, 50)
-    TextLabel.Position = UDim2.new(0.057, 0, 0, 0)
-    TextLabel.BackgroundTransparency = 1
-    TextLabel.TextScaled = true
-    TextLabel.Font = Enum.Font.SourceSansBold
-    TextLabel.Text = params.name or "Your Text Here"  -- Используем имя из переданных параметров
-    TextLabel.TextColor3 = Color3.new(1, 1, 1)
-    TextLabel.Parent = MainFrame
+local MiscTab = Window:MakeTab({
+    Name = "Misc",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
-    -- Настройка кнопки закрытия
-    local CloseButton = Instance.new("TextButton")
-    CloseButton.Size = UDim2.new(0, 32, 0, 32)
-    CloseButton.Position = UDim2.new(0.969, 0, 0, 0)
-    CloseButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-    CloseButton.TextScaled = true
-    CloseButton.Font = Enum.Font.SourceSansBold
-    CloseButton.Text = "X"
-    CloseButton.TextColor3 = Color3.new(1, 1, 1)
-    CloseButton.Parent = MainFrame
+local screenGui = Instance.new("ScreenGui", game.Players.LocalPlayer:WaitForChild("PlayerGui"))
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
-    -- Закрытие окна при нажатии на кнопку
-    CloseButton.MouseButton1Click:Connect(function()
-        ScreenGui:Destroy()
+local function createNotification(title, message)
+    local notificationFrame = Instance.new("Frame", screenGui)
+    local notificationTitle = Instance.new("TextLabel", notificationFrame)
+    local notificationMessage = Instance.new("TextLabel", notificationFrame)
+
+    -- Настройки начальных значений для уведомления
+    notificationFrame.AnchorPoint = Vector2.new(1, 1)
+    notificationFrame.Position = UDim2.new(1, -10, 1, -10)  -- Позиция справа снизу
+    notificationFrame.Size = UDim2.new(0, 200, 0, 60)
+    notificationFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+    notificationFrame.BorderSizePixel = 0
+    notificationFrame.BackgroundTransparency = 0.5
+
+    notificationTitle.Text = title
+    notificationTitle.Size = UDim2.new(1, -10, 0.5, -5)
+    notificationTitle.Position = UDim2.new(0, 5, 0, 5)
+    notificationTitle.BackgroundTransparency = 1
+    notificationTitle.TextColor3 = Color3.new(1, 1, 1)
+    notificationTitle.TextScaled = true
+
+    notificationMessage.Text = message
+    notificationMessage.Size = UDim2.new(1, -10, 0.5, -5)
+    notificationMessage.Position = UDim2.new(0, 5, 0.5, 0)
+    notificationMessage.BackgroundTransparency = 1
+    notificationMessage.TextColor3 = Color3.new(1, 1, 1)
+    notificationMessage.TextScaled = true
+
+    local uiCornerNotification = Instance.new("UICorner", notificationFrame)
+    uiCornerNotification.CornerRadius = UDim.new(0, 10) -- Закругление углов
+
+    -- Создаем tween для появления уведомления
+    local notificationTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local notificationAppearGoals = {BackgroundTransparency = 0.5, Position = UDim2.new(1, -10, 1, -70)}
+    local notificationDisappearGoals = {BackgroundTransparency = 1, Position = UDim2.new(1, -10, 1, -10)}
+
+    local notificationAppearTween = TweenService:Create(notificationFrame, notificationTweenInfo, notificationAppearGoals)
+    local notificationDisappearTween = TweenService:Create(notificationFrame, notificationTweenInfo, notificationDisappearGoals)
+
+    -- Создаем tween для исчезновения текста
+    local textFadeOutGoals = {TextTransparency = 1}
+    local titleFadeOutTween = TweenService:Create(notificationTitle, notificationTweenInfo, textFadeOutGoals)
+    local messageFadeOutTween = TweenService:Create(notificationMessage, notificationTweenInfo, textFadeOutGoals)
+
+    -- Показ уведомления
+    notificationAppearTween:Play()
+    wait(3) -- Уведомление отображается в течение 3 секунд
+    titleFadeOutTween:Play()
+    messageFadeOutTween:Play()
+    notificationDisappearTween:Play()
+
+    notificationDisappearTween.Completed:Connect(function()
+        notificationFrame:Destroy()
     end)
-
-    -- Переменные для перетаскивания
-    local dragging = false
-    local dragInput, mousePos, framePos
-
-    -- Функция для начала перетаскивания
-    local function onInputBegan(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            mousePos = input.Position
-            framePos = MainFrame.Position
-
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end
-
-    -- Функция для перетаскивания
-    local function onInputChanged(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
-    end
-
-    -- Функция для обновления позиции при перетаскивании
-    local function update(input)
-        if dragging then
-            local delta = input.Position - mousePos
-            MainFrame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
-        end
-    end
-
-    -- Подключение функций к событиям
-    MainFrame.InputBegan:Connect(onInputBegan)
-    MainFrame.InputChanged:Connect(onInputChanged)
-    game:GetService("UserInputService").InputChanged:Connect(update)
-
-    -- Добавление дополнительного интро текста и иконки, если указаны
-    if params.IntroText or params.IntroIcon then
-        local IntroFrame = Instance.new("Frame")
-        IntroFrame.Size = UDim2.new(1, 0, 0.3, 0)
-        IntroFrame.Position = UDim2.new(0, 0, 0.7, 0)
-        IntroFrame.BackgroundTransparency = 1
-        IntroFrame.Parent = MainFrame
-
-        if params.IntroIcon then
-            local IntroIcon = Instance.new("ImageLabel")
-            IntroIcon.Size = UDim2.new(0, 52, 0, 52)
-            IntroIcon.Position = UDim2.new(0.1, 0, 0.2, 0)
-            IntroIcon.Image = "rbxassetid://" .. tostring(params.IntroIcon)
-            IntroIcon.BackgroundTransparency = 1
-            IntroIcon.Parent = IntroFrame
-        end
-
-        if params.IntroText then
-            local IntroText = Instance.new("TextLabel")
-            IntroText.Size = UDim2.new(0.8, 0, 0.5, 0)
-            IntroText.Position = UDim2.new(0.2, 0, 0.25, 0)
-            IntroText.BackgroundTransparency = 1
-            IntroText.TextScaled = true
-            IntroText.Font = Enum.Font.SourceSansBold
-            IntroText.Text = params.IntroText
-            IntroText.TextColor3 = Color3.new(1, 1, 1)
-            IntroText.Parent = IntroFrame
-        end
-    end
-
-    return ScreenGui
 end
 
-return UI_Module
+-- Adding features to the LT2 tab
+LT2:AddButton({
+    Name = "Wood R us",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(259.498, 3.16998, 57.6584)
+            createNotification("Teleport", "Teleported to Wood R Us")
+        end
+    end
+})
+
+LT2:AddButton({
+    Name = "Land Store",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(273.155, 3.08099, -97.9038)
+            createNotification("Teleport", "Teleported to Land Store")
+        end
+    end
+})
+
+LT2:AddButton({
+    Name = "Car shop",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(509.9, 3.13624, -1452.15)
+            createNotification("Teleport", "Teleported to Car Shop")
+        end
+    end
+})
+
+LT2:AddButton({
+    Name = "Furniture Shop",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(498.77, 3.05071, -1729.68)
+            createNotification("Teleport", "Teleported to Furniture Shop")
+        end
+    end
+})
+
+LT2:AddButton({
+    Name = "FineArt Shop",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(5226.62, -166.177, 718.345)
+            createNotification("Teleport", "Teleported to FineArt Shop")
+        end
+    end
+})
+
+LT2:AddButton({
+    Name = "ShackShop",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(264.61, 8.25245, -2541.67)
+            createNotification("Teleport", "Teleported to Shack Shop")
+        end
+    end
+})
+
+LT2:AddButton({
+    Name = "Swamp Location",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(-1090.67, 131.533, -1108.28)
+            createNotification("Teleport", "Teleported to Swamp")
+        end
+    end
+})
+
+LT2:AddButton({
+    Name = "Volcano Location",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(-1661.97, 623, 1066.59)
+            createNotification("Teleport", "Teleported to Volcano")
+        end
+    end
+})
+
+LT2:AddButton({
+    Name = "Palm Location",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = CFrame.new(1938.3, -5.91243, -1537.41)
+            createNotification("Teleport", "Teleported to Palm")
+        end
+    end
+})
+
+local speed = 16  -- Начальная скорость
+
+-- Функция для перемещения с использованием CFrame
+local function moveCharacter()
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+
+    if humanoidRootPart then
+        RunService.RenderStepped:Connect(function()
+            if humanoidRootPart then
+                local moveDirection = Vector3.new(0, 0, 0)
+
+                if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+                    moveDirection = moveDirection + humanoidRootPart.CFrame.LookVector
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+                    moveDirection = moveDirection - humanoidRootPart.CFrame.LookVector
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+                    moveDirection = moveDirection - humanoidRootPart.CFrame.RightVector
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+                    moveDirection = moveDirection + humanoidRootPart.CFrame.RightVector
+                end
+
+                if moveDirection.Magnitude > 0 then
+                    humanoidRootPart.CFrame = humanoidRootPart.CFrame + (moveDirection.Unit * speed / 50)
+                end
+            end
+        end)
+    end
+end
+
+-- Добавляем ползунок на вкладку
+Tab:AddSlider({
+    Name = "CFrame Speed",
+    Min = 0,
+    Max = 100,
+    Default = 16,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "Speed",
+    Callback = function(Value)
+        speed = Value
+    end    
+})
+
+-- Запускаем функцию перемещения
+moveCharacter()
+
+Tab:AddSlider({
+    Name = "Jump Power",
+    Min = 0,
+    Max = 200,
+    Default = 50,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "Power",
+    Callback = function(Value)
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
+    end    
+})
+
+Tab:AddSlider({
+    Name = "Field of View",
+    Min = 90,
+    Max = 120,
+    Default = 90,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "FOV",
+    Callback = function(Value)
+        game.Workspace.CurrentCamera.FieldOfView = Value
+    end    
+})
+
+local camLockEnabled = false
+local targetPlayer = nil
+local function getClosestPlayer()
+    local Player = game.Players.LocalPlayer
+    local Camera = game.Workspace.CurrentCamera
+    local closestDistance = math.huge
+    local closestPlayer = nil
+
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if player ~= Player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                local distance = (Camera.CFrame.Position - player.Character.HumanoidRootPart.Position).magnitude
+                if distance < _G.camLockDistance and humanoid.Health > 10 and distance < closestDistance then
+                    closestDistance = distance
+                    closestPlayer = player
+                end
+            end
+        end
+    end
+
+    return closestPlayer
+end
+
+local function updateCamLock()
+    while camLockEnabled do
+        wait()
+        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local targetPosition
+            if _G.camLockTarget == "Head" and targetPlayer.Character:FindFirstChild("Head") then
+                targetPosition = targetPlayer.Character.Head.Position
+            else
+                targetPosition = targetPlayer.Character.HumanoidRootPart.Position
+            end
+
+            local cameraPosition = game.Workspace.CurrentCamera.CFrame.Position
+            local direction = (targetPosition - cameraPosition).unit
+            local newCFrame = CFrame.new(cameraPosition, cameraPosition + direction)
+            game.Workspace.CurrentCamera.CFrame = CFrame.new(cameraPosition, targetPosition)
+        else
+            targetPlayer = getClosestPlayer()
+        end
+    end
+end
+
+DH:AddToggle({
+    Name = "Enable CamLock",
+    Default = false,
+    Callback = function(Value)
+        camLockEnabled = Value
+        if Value then
+            targetPlayer = getClosestPlayer()
+            spawn(updateCamLock)
+        end
+    end    
+})
+
+-- Define the distance slider
+DH:AddSlider({
+    Name = "Distance",
+    Min = 0,
+    Max = 50,
+    Default = 5,
+    Color = Color3.fromRGB(255, 255, 255),
+    Increment = 1,
+    ValueName = "units",
+    Callback = function(Value)
+        _G.camLockDistance = Value
+    end
+})
+
+-- Define the dropdown menu for selecting the target body part
+DH:AddDropdown({
+    Name = "Target Body Part",
+    Default = "Head",
+    Options = {"Head", "Torso", "HumanoidRootPart"},
+    Callback = function(Value)
+        _G.camLockTarget = Value
+    end    
+})
+
+-- Key bind for switching targets
+UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+    if input.KeyCode == Enum.KeyCode.Q and camLockEnabled and not gameProcessedEvent then
+        targetPlayer = getClosestPlayer()
+    end
+end)
