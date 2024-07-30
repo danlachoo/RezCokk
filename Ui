@@ -271,6 +271,7 @@ Tab:AddSlider({
 
 local camLockEnabled = false
 local targetPlayer = nil
+
 local function getClosestPlayer()
     local Player = game.Players.LocalPlayer
     local Camera = game.Workspace.CurrentCamera
@@ -322,6 +323,23 @@ DH:AddToggle({
         if Value then
             targetPlayer = getClosestPlayer()
             spawn(updateCamLock)
+        end
+    end    
+})
+
+-- Adding the keybind functionality for Q key
+Tab:AddBind({
+    Name = "Toggle CamLock",
+    Default = Enum.KeyCode.Q,
+    Hold = false,
+    Callback = function()
+        camLockEnabled = not camLockEnabled
+        if camLockEnabled then
+            targetPlayer = getClosestPlayer()
+            spawn(updateCamLock)
+        else
+            -- Reset the camera to default behavior when cam lock is disabled
+            game.Workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character.Humanoid
         end
     end    
 })
