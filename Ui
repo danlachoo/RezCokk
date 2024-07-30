@@ -102,13 +102,9 @@ PL:AddButton({
 	Name = "Free Emotes",
 	Callback = function()
       		for i,real in pairs(game.Players.LocalPlayer.Emotes:GetChildren()) do
-real.Value = true
-end
+			real.Value = true
+		end
   	end    
-})
-
-local Section = PL:AddSection({
-	Name = "Other"
 })
 
 
