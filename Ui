@@ -271,6 +271,7 @@ Tab:AddSlider({
 
 local camLockEnabled = false
 local targetPlayer = nil
+local whiteListedPlayers = {}
 
 local function getClosestPlayer()
     local Player = game.Players.LocalPlayer
@@ -283,7 +284,7 @@ local function getClosestPlayer()
             local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
             if humanoid then
                 local distance = (Camera.CFrame.Position - player.Character.HumanoidRootPart.Position).magnitude
-                if distance < _G.camLockDistance and humanoid.Health > 10 and distance < closestDistance then
+                if distance < _G.camLockDistance and humanoid.Health > 10 and distance < closestDistance and whiteListedPlayers[player.Name] then
                     closestDistance = distance
                     closestPlayer = player
                 end
@@ -327,7 +328,6 @@ DH:AddToggle({
     end    
 })
 
--- Adding the keybind functionality for Q key
 Tab:AddBind({
     Name = "Toggle CamLock",
     Default = Enum.KeyCode.Q,
@@ -343,6 +343,41 @@ Tab:AddBind({
         end
     end    
 })
+
+Tab:AddBind({
+    Name = "Bind",
+    Default = Enum.KeyCode.E,
+    Hold = false,
+    Callback = function()
+        print("press")
+    end    
+})
+
+-- Adding TextBox for whitelist
+Tab:AddTextbox({
+    Name = "Add to Whitelist",
+    Default = "",
+    TextDisappear = true,
+    Callback = function(Value)
+        whiteListedPlayers[Value] = true
+        print(Value .. " added to whitelist")
+    end	  
+})
+
+-- Adding Label
+local CoolLabel = Tab:AddLabel("Label")
+
+-- Function to update label
+Tab:AddTextbox({
+    Name = "Update Label",
+    Default = "",
+    TextDisappear = true,
+    Callback = function(Value)
+        CoolLabel:Set(Value)
+        print("Label updated to: " .. Value)
+    end	  
+})
+
 
 -- Define the distance slider
 DH:AddSlider({
