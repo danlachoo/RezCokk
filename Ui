@@ -281,15 +281,15 @@ local function getClosestPlayer()
     local closestDistance = math.huge
     local closestPlayer = nil
 
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if player ~= player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            if not table.find(whitelist, player.Name) then
-                local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            if not table.find(whitelist, p.Name) then
+                local humanoid = p.Character:FindFirstChildOfClass("Humanoid")
                 if humanoid then
-                    local distance = (Camera.CFrame.Position - player.Character.HumanoidRootPart.Position).magnitude
+                    local distance = (Camera.CFrame.Position - p.Character.HumanoidRootPart.Position).magnitude
                     if distance < _G.camLockDistance and humanoid.Health > 10 and distance < closestDistance then
                         closestDistance = distance
-                        closestPlayer = player
+                        closestPlayer = p
                     end
                 end
             end
@@ -417,4 +417,3 @@ UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
         targetPlayer = getClosestPlayer()
     end
 end)
-
