@@ -273,6 +273,7 @@ Tab:AddSlider({
 local camLockEnabled = false
 local targetPlayer = nil
 local whitelist = {}
+local attackMethod = "Normal"
 
 local function getClosestPlayer()
     local Player = game.Players.LocalPlayer
@@ -309,10 +310,22 @@ local function updateCamLock()
                 targetPosition = targetPlayer.Character.HumanoidRootPart.Position
             end
 
-            local cameraPosition = game.Workspace.CurrentCamera.CFrame.Position
-            local direction = (targetPosition - cameraPosition).unit
-            local newCFrame = CFrame.new(cameraPosition, cameraPosition + direction)
-            game.Workspace.CurrentCamera.CFrame = CFrame.new(cameraPosition, targetPosition)
+            if attackMethod == "Normal" then
+                local cameraPosition = game.Workspace.CurrentCamera.CFrame.Position
+                local direction = (targetPosition - cameraPosition).unit
+                local newCFrame = CFrame.new(cameraPosition, cameraPosition + direction)
+                game.Workspace.CurrentCamera.CFrame = CFrame.new(cameraPosition, targetPosition)
+            elseif attackMethod == "Above Head" then
+                local offset = Vector3.new(0, 10, 0)  -- Adjust the height as needed
+                local cameraPosition = targetPosition + offset
+                game.Workspace.CurrentCamera.CFrame = CFrame.new(cameraPosition, targetPosition)
+            elseif attackMethod == "Circle Around" then
+                local radius = 10  -- Adjust the radius as needed
+                local angle = tick() * math.pi / 4  -- Adjust the speed of rotation
+                local offset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
+                local cameraPosition = targetPosition + offset + Vector3.new(0, 5, 0)  -- Adjust the height as needed
+                game.Workspace.CurrentCamera.CFrame = CFrame.new(cameraPosition, targetPosition)
+            end
         else
             targetPlayer = getClosestPlayer()
         end
@@ -331,7 +344,6 @@ DH:AddToggle({
     end    
 })
 
--- Adding the keybind functionality for Q key
 Tab:AddBind({
     Name = "Toggle CamLock",
     Default = Enum.KeyCode.Q,
@@ -342,13 +354,11 @@ Tab:AddBind({
             targetPlayer = getClosestPlayer()
             spawn(updateCamLock)
         else
-            -- Reset the camera to default behavior when cam lock is disabled
             game.Workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character.Humanoid
         end
     end    
 })
 
--- Adding a textbox to input whitelisted player names
 Tab:AddTextbox({
     Name = "Add to Whitelist",
     Default = "",
@@ -372,8 +382,6 @@ Tab:AddTextbox({
     end
 })
 
-
--- Define the distance slider
 DH:AddSlider({
     Name = "Distance",
     Min = 0,
@@ -387,7 +395,6 @@ DH:AddSlider({
     end
 })
 
--- Define the dropdown menu for selecting the target body part
 DH:AddDropdown({
     Name = "Target Body Part",
     Default = "Head",
@@ -397,7 +404,15 @@ DH:AddDropdown({
     end    
 })
 
--- Key bind for switching targets
+DH:AddDropdown({
+    Name = "Attack Method",
+    Default = "Normal",
+    Options = {"Normal", "Above Head", "Circle Around"},
+    Callback = function(Value)
+        attackMethod = Value
+    end    
+})
+
 UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
     if input.KeyCode == Enum.KeyCode.Q and camLockEnabled and not gameProcessedEvent then
         targetPlayer = getClosestPlayer()
