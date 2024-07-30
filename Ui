@@ -274,15 +274,15 @@ local camLockEnabled = false
 local targetPlayer = nil
 local whitelist = {}
 local attackMethod = "Normal"
+local player = game.Players.LocalPlayer
 
 local function getClosestPlayer()
-    local Player = game.Players.LocalPlayer
     local Camera = game.Workspace.CurrentCamera
     local closestDistance = math.huge
     local closestPlayer = nil
 
     for _, player in pairs(game.Players:GetPlayers()) do
-        if player ~= Player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        if player ~= player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             if not table.find(whitelist, player.Name) then
                 local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
                 if humanoid then
@@ -310,21 +310,18 @@ local function updateCamLock()
                 targetPosition = targetPlayer.Character.HumanoidRootPart.Position
             end
 
-            if attackMethod == "Normal" then
-                local cameraPosition = game.Workspace.CurrentCamera.CFrame.Position
-                local direction = (targetPosition - cameraPosition).unit
-                local newCFrame = CFrame.new(cameraPosition, cameraPosition + direction)
-                game.Workspace.CurrentCamera.CFrame = CFrame.new(cameraPosition, targetPosition)
-            elseif attackMethod == "Above Head" then
-                local offset = Vector3.new(0, 10, 0)  -- Adjust the height as needed
-                local cameraPosition = targetPosition + offset
-                game.Workspace.CurrentCamera.CFrame = CFrame.new(cameraPosition, targetPosition)
-            elseif attackMethod == "Circle Around" then
-                local radius = 10  -- Adjust the radius as needed
-                local angle = tick() * math.pi / 4  -- Adjust the speed of rotation
-                local offset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
-                local cameraPosition = targetPosition + offset + Vector3.new(0, 5, 0)  -- Adjust the height as needed
-                game.Workspace.CurrentCamera.CFrame = CFrame.new(cameraPosition, targetPosition)
+            local playerRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            if playerRootPart then
+                if attackMethod == "Normal" then
+                    playerRootPart.CFrame = CFrame.new(playerRootPart.Position, targetPosition)
+                elseif attackMethod == "Above Head" then
+                    playerRootPart.CFrame = CFrame.new(targetPosition + Vector3.new(0, 10, 0))
+                elseif attackMethod == "Circle Around" then
+                    local radius = 10  -- Adjust the radius as needed
+                    local angle = tick() * math.pi / 4  -- Adjust the speed of rotation
+                    local offset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
+                    playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
+                end
             end
         else
             targetPlayer = getClosestPlayer()
@@ -354,6 +351,7 @@ Tab:AddBind({
             targetPlayer = getClosestPlayer()
             spawn(updateCamLock)
         else
+            -- Reset the camera to default behavior when cam lock is disabled
             game.Workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character.Humanoid
         end
     end    
