@@ -111,47 +111,6 @@ local Section = PL:AddSection({
 	Name = "Other"
 })
 
-local floatingEnabled = false
-local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-local bodyVelocity
-
-local function enableFloating()
-    if not bodyVelocity then
-        bodyVelocity = Instance.new("BodyVelocity")
-        bodyVelocity.Velocity = Vector3.new(0, 0, 0) -- No movement, just floating
-        bodyVelocity.MaxForce = Vector3.new(0, math.huge, 0) -- Infinite force upwards
-        bodyVelocity.Parent = humanoidRootPart
-    end
-end
-
-local function disableFloating()
-    if bodyVelocity then
-        bodyVelocity:Destroy()
-        bodyVelocity = nil
-    end
-end
-
-local function toggleFloating(state)
-    floatingEnabled = state
-    if floatingEnabled then
-        enableFloating()
-    else
-        disableFloating()
-    end
-end
-
-PL:AddToggle({
-    Name = "Float in Air",
-    Default = false,
-    Callback = function(Value)
-        createNotification("Plates Of Fate", "Float in air")
-        toggleFloating(Value)
-        print("Floating:", Value)
-    end    
-})
-
 
 -- Adding features to the LT2 tab
 LT2:AddButton({
