@@ -20,12 +20,6 @@ local DH = Window:MakeTab({
     PremiumOnly = false
 })
 
-local PL = Window:MakeTab({
-    Name = "Plates Of Fate",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
 local LT2 = Window:MakeTab({
     Name = "Lumber Tycoon 2",
     Icon = "rbxassetid://4483345998",
