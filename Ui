@@ -98,15 +98,6 @@ local function createNotification(title, message)
     end)
 end
 
-PL:AddButton({
-	Name = "Free Emotes",
-	Callback = function()
-      		for i,real in pairs(game.Players.LocalPlayer.Emotes:GetChildren()) do
-			real.Value = true
-		end
-  	end    
-})
-
 
 -- Adding features to the LT2 tab
 LT2:AddButton({
