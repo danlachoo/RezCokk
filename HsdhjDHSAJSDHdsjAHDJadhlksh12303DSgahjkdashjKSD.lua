@@ -305,44 +305,96 @@ Tab:AddSlider({
 })
 
 local Players = game:GetService("Players")
-
 local hitboxes = {}
+local weaponDisplay = {}
+local usernameDisplay = {}
 
--- Function to create hitbox parts for a player's character
+-- Function to create a rectangular hitbox for a player's character
 local function createHitbox(character)
-    local charHitboxes = {}
-    for _, part in pairs(character:GetChildren()) do
-        if part:IsA("BasePart") then
-            local hitbox = Instance.new("Part")
-            hitbox.Size = part.Size
-            hitbox.CFrame = part.CFrame
-            hitbox.Anchored = true
-            hitbox.Transparency = 0.5
-            hitbox.Color = Color3.fromRGB(255, 0, 0)
-            hitbox.CanCollide = false
-            hitbox.Parent = character
+    local torso = character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+    if torso then
+        local hitbox = Instance.new("Part")
+        hitbox.Size = Vector3.new(4, 7, 2)  -- Size of the hitbox
+        hitbox.CFrame = torso.CFrame
+        hitbox.Anchored = false
+        hitbox.Transparency = 0.5
+        hitbox.Color = Color3.fromRGB(255, 0, 0)
+        hitbox.CanCollide = false
+        hitbox.Parent = character
 
-            table.insert(charHitboxes, hitbox)
-        end
+        local weld = Instance.new("WeldConstraint")
+        weld.Part0 = torso
+        weld.Part1 = hitbox
+        weld.Parent = torso
+
+        hitboxes[character] = hitbox
+
+        -- Create BillboardGui for weapon and username
+        local billboard = Instance.new("BillboardGui", hitbox)
+        billboard.Size = UDim2.new(2, 0, 1, 0)
+        billboard.StudsOffset = Vector3.new(0, 5, 0)
+        billboard.AlwaysOnTop = true
+
+        -- Create TextLabel for username
+        local usernameLabel = Instance.new("TextLabel", billboard)
+        usernameLabel.Size = UDim2.new(1, 0, 0.5, 0)
+        usernameLabel.Position = UDim2.new(0, 0, 0, 0)
+        usernameLabel.Text = character.Name
+        usernameLabel.TextColor3 = Color3.new(1, 1, 1)
+        usernameLabel.BackgroundTransparency = 1
+
+        -- Create TextLabel for weapon
+        local weaponLabel = Instance.new("TextLabel", billboard)
+        weaponLabel.Size = UDim2.new(1, 0, 0.5, 0)
+        weaponLabel.Position = UDim2.new(0, 0, 0.5, 0)
+        weaponLabel.TextColor3 = Color3.new(1, 1, 1)
+        weaponLabel.BackgroundTransparency = 1
+
+        weaponDisplay[character] = weaponLabel
+        usernameDisplay[character] = usernameLabel
     end
-    hitboxes[character] = charHitboxes
 end
 
--- Function to remove hitbox parts for a player's character
+-- Function to remove hitbox for a player's character
 local function removeHitbox(character)
     if hitboxes[character] then
-        for _, hitbox in pairs(hitboxes[character]) do
-            hitbox:Destroy()
-        end
+        hitboxes[character]:Destroy()
         hitboxes[character] = nil
+        weaponDisplay[character] = nil
+        usernameDisplay[character] = nil
     end
 end
 
 -- Function to toggle hitboxes on or off
 local function toggleHitboxes(state)
-    for _, charHitboxes in pairs(hitboxes) do
-        for _, hitbox in pairs(charHitboxes) do
-            hitbox.Transparency = state and 0.5 or 1
+    for _, hitbox in pairs(hitboxes) do
+        hitbox.Transparency = state and 0.5 or 1
+    end
+end
+
+-- Function to toggle weapon display on or off
+local function toggleWeapon(state)
+    for _, label in pairs(weaponDisplay) do
+        label.Visible = state
+    end
+end
+
+-- Function to toggle username display on or off
+local function toggleUsername(state)
+    for _, label in pairs(usernameDisplay) do
+        label.Visible = state
+    end
+end
+
+-- Function to update the weapon display
+local function updateWeapon(character)
+    local weaponLabel = weaponDisplay[character]
+    if weaponLabel then
+        local weapon = character:FindFirstChildOfClass("Tool")
+        if weapon then
+            weaponLabel.Text = weapon.Name
+        else
+            weaponLabel.Text = "No Weapon"
         end
     end
 end
@@ -352,6 +404,17 @@ local function onPlayerAdded(player)
     player.CharacterAdded:Connect(function(character)
         wait(1) -- Wait for the character to fully load
         createHitbox(character)
+        updateWeapon(character)
+        character.ChildAdded:Connect(function(child)
+            if child:IsA("Tool") then
+                updateWeapon(character)
+            end
+        end)
+        character.ChildRemoved:Connect(function(child)
+            if child:IsA("Tool") then
+                updateWeapon(character)
+            end
+        end)
     end)
 end
 
@@ -360,11 +423,18 @@ Players.PlayerAdded:Connect(onPlayerAdded)
 for _, player in pairs(Players:GetPlayers()) do
     if player.Character then
         createHitbox(player.Character)
+        updateWeapon(player.Character)
+        player.Character.ChildAdded:Connect(function(child)
+            if child:IsA("Tool") then
+                updateWeapon(player.Character)
+            end
+        end)
+        player.Character.ChildRemoved:Connect(function(child)
+            if child:IsA("Tool") then
+                updateWeapon(player.Character)
+            end
+        end)
     end
-    player.CharacterAdded:Connect(function(character)
-        wait(1)
-        createHitbox(character)
-    end)
 end
 
 -- Cleanup hitboxes when the character is removed
@@ -374,12 +444,27 @@ Players.PlayerRemoving:Connect(function(player)
     end
 end)
 
-
-Tab:AddToggle({
+VS:AddToggle({
     Name = "Show/Hide Hitboxes",
     Default = false,
     Callback = function(value)
         toggleHitboxes(value)
+    end    
+})
+
+VS:AddToggle({
+    Name = "Show/Hide Weapon",
+    Default = false,
+    Callback = function(value)
+        toggleWeapon(value)
+    end    
+})
+
+VS:AddToggle({
+    Name = "Show/Hide Username",
+    Default = false,
+    Callback = function(value)
+        toggleUsername(value)
     end    
 })
 
