@@ -34,6 +34,8 @@ local MiscTab = Window:MakeTab({
 
 local screenGui = Instance.new("ScreenGui", game.Players.LocalPlayer:WaitForChild("PlayerGui"))
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
 local function createNotification(title, message)
     local notificationFrame = Instance.new("Frame", screenGui)
@@ -89,6 +91,7 @@ local function createNotification(title, message)
         notificationFrame:Destroy()
     end)
 end
+
 
 -- Adding features to the LT2 tab
 LT2:AddButton({
@@ -199,9 +202,6 @@ local function moveCharacter()
     local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
 
     if humanoidRootPart then
-        local UserInputService = game:GetService("UserInputService")
-        local RunService = game:GetService("RunService")
-
         RunService.RenderStepped:Connect(function()
             if humanoidRootPart then
                 local moveDirection = Vector3.new(0, 0, 0)
@@ -270,64 +270,121 @@ Tab:AddSlider({
     end    
 })
 
-DH:AddToggle({
-    Name = "Enable CamLock",
-    Default = false,
-    Callback = function(Value)
-        local Player = game.Players.LocalPlayer
-        local Camera = game.Workspace.CurrentCamera
-        local camLockEnabled = Value
+local camLockEnabled = false
+local targetPlayer = nil
+local whitelist = {}
+local attackMethod = "Normal"
+local lastKilledPlayerPosition = nil
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local TweenService = game:GetService("TweenService")
 
-        if Value then
-            -- CamLock logic here
-            local function updateCamLock()
-                while camLockEnabled do
-                    wait()
-                    local targetPlayer = nil
-                    local closestDistance = math.huge
+local function getClosestPlayer()
+    local Player = Players.LocalPlayer
+    local Camera = Workspace.CurrentCamera
+    local closestDistance = math.huge
+    local closestPlayer = nil
 
-                    for _, player in pairs(game.Players:GetPlayers()) do
-                        if player ~= Player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-                            if humanoid then
-                                local distance = (Camera.CFrame.Position - player.Character.HumanoidRootPart.Position).magnitude
-                                -- Check if the distance is within the slider's value and the player's health is greater than 10
-                                if distance < _G.camLockDistance and humanoid.Health > 10 and distance < closestDistance then
-                                    closestDistance = distance
-                                    targetPlayer = player
-                                end
-                            end
-                        end
-                    end
-
-                    if targetPlayer then
-                        -- Determine the target position based on the selected body part
-                        local targetPosition
-                        if _G.camLockTarget == "Head" and targetPlayer.Character:FindFirstChild("Head") then
-                            targetPosition = targetPlayer.Character.Head.Position
-                        else
-                            targetPosition = targetPlayer.Character.HumanoidRootPart.Position
-                        end
-
-                        -- Smoothly adjust the camera towards the target player
-                        local cameraPosition = Camera.CFrame.Position
-                        local direction = (targetPosition - cameraPosition).unit
-                        local newCFrame = CFrame.new(cameraPosition, cameraPosition + direction)
-                        Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPosition)
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= Player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            if not table.find(whitelist, player.Name) then
+                local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    local distance = (Camera.CFrame.Position - player.Character.HumanoidRootPart.Position).magnitude
+                    if distance < _G.camLockDistance and humanoid.Health > 10 and distance < closestDistance then
+                        closestDistance = distance
+                        closestPlayer = player
                     end
                 end
             end
+        end
+    end
 
-            -- Start CamLock logic
+    return closestPlayer
+end
+
+local function onPlayerRemoved(player)
+    if targetPlayer == player then
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            lastKilledPlayerPosition = player.Character.HumanoidRootPart.Position
+        end
+    end
+end
+
+local function updateCamLock()
+    while camLockEnabled do
+        wait()
+        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local targetPosition
+            if _G.camLockTarget == "Head" and targetPlayer.Character:FindFirstChild("Head") then
+                targetPosition = targetPlayer.Character.Head.Position
+            else
+                targetPosition = targetPlayer.Character.HumanoidRootPart.Position
+            end
+
+            local playerRootPart = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if playerRootPart then
+                if attackMethod == "Normal" then
+                    playerRootPart.CFrame = CFrame.new(playerRootPart.Position, targetPosition)
+                elseif attackMethod == "Above Head" then
+                    local radius = 5
+                    local height = 10
+                    local angle = tick() * 2
+                    local offset = Vector3.new(math.cos(angle) * radius, height, math.sin(angle) * radius)
+                    local newPosition = targetPosition + offset
+
+                    -- Check distance and adjust if necessary
+                    local distance = (playerRootPart.Position - newPosition).magnitude
+                    if distance > radius then
+                        playerRootPart.CFrame = CFrame.new(newPosition, targetPosition)
+                    end
+                elseif attackMethod == "Circle Around" then
+                    local radius = 10
+                    local speed = 200
+                    local angle = tick() * speed
+                    local offset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
+                    playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
+                elseif attackMethod == "Air" then
+                    local radius = 7
+                    local speed = 100
+                    local angle = tick() * speed
+                    local offset = Vector3.new(math.cos(angle) * radius, 5, math.sin(angle) * radius)
+                    playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
+                end
+            end
+
+            local cameraPosition = Workspace.CurrentCamera.CFrame.Position
+            local direction = (targetPosition - cameraPosition).unit
+            Workspace.CurrentCamera.CFrame = CFrame.new(cameraPosition, targetPosition)
+        else
+            targetPlayer = getClosestPlayer()
+        end
+    end
+end
+
+-- Connect to player removal event
+Players.PlayerRemoving:Connect(onPlayerRemoved)
+
+local Section = DH:AddSection({
+    Name = "CamLock"
+})
+
+DH:AddBind({
+    Name = "Toggle CamLock",
+    Default = Enum.KeyCode.Q,
+    Hold = false,
+    Callback = function()
+        camLockEnabled = not camLockEnabled
+        if camLockEnabled then
+            targetPlayer = getClosestPlayer()
             spawn(updateCamLock)
         else
-            -- Stop CamLock logic
-            camLockEnabled = false
+            Workspace.CurrentCamera.CameraSubject = Players.LocalPlayer.Character.Humanoid
         end
     end    
 })
 
--- Define the distance slider
 DH:AddSlider({
     Name = "Distance",
     Min = 0,
@@ -337,18 +394,307 @@ DH:AddSlider({
     Increment = 1,
     ValueName = "units",
     Callback = function(Value)
-        -- Store the value globally or in a way that it can be accessed later
         _G.camLockDistance = Value
     end
 })
 
--- Define the dropdown menu for selecting the target body part
 DH:AddDropdown({
     Name = "Target Body Part",
     Default = "Head",
     Options = {"Head", "Torso", "HumanoidRootPart"},
     Callback = function(Value)
-        -- Store the value globally or in a way that it can be accessed later
         _G.camLockTarget = Value
     end    
 })
+
+DH:AddDropdown({
+    Name = "Attack Method",
+    Default = "Normal",
+    Options = {"Normal", "Above Head", "Circle Around", "Air"},
+    Callback = function(Value)
+        attackMethod = Value
+    end    
+})
+
+UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+    if input.KeyCode == Enum.KeyCode.Q and camLockEnabled and not gameProcessedEvent then
+        targetPlayer = getClosestPlayer()
+    end
+end)
+
+
+
+local Section = DH:AddSection({
+	Name = "Other"
+})
+
+DH:AddButton({
+	Name = "Animations Gamepass",
+	Callback = function()
+      		--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+     -- // clone
+            for _, v in next, game:GetService("CoreGui"):GetChildren() do
+                if (v.Name:match("FreeAnimationPack")) then
+                    v:Destroy()
+                end
+            end
+        
+            -- // Instances
+            local FreeAnimationPack = Instance.new("ScreenGui")
+            local AnimationPack = Instance.new("TextButton")
+            local Animations = Instance.new("ScrollingFrame")
+            local UIListLayout = Instance.new("UIListLayout")
+            local Lean = Instance.new("TextButton")
+            local Lay = Instance.new("TextButton")
+            local Dance1 = Instance.new("TextButton")
+            local Dance2 = Instance.new("TextButton")
+            local Greet = Instance.new("TextButton")
+            local ChestPump = Instance.new("TextButton")
+            local Praying = Instance.new("TextButton")
+            local Stop = Instance.new("TextButton")
+            local UniversalAnimation = Instance.new("Animation")
+        
+            -- // Utility
+            function stopTracks()
+                for _, v in next, game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):GetPlayingAnimationTracks() do
+                    if (v.Animation.AnimationId:match("rbxassetid")) then
+                        v:Stop()
+                    end
+                end
+            end
+        
+            function loadAnimation(id)
+                if UniversalAnimation.AnimationId == id then
+                    stopTracks()
+                    UniversalAnimation.AnimationId = "1"
+                else
+                    UniversalAnimation.AnimationId = id
+                    local animationTrack = game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):LoadAnimation(UniversalAnimation)
+                    animationTrack:Play()
+                end
+            end
+        
+
+            FreeAnimationPack.Name = "FreeAnimationPack"
+            FreeAnimationPack.Parent = game.CoreGui
+            FreeAnimationPack.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        
+            AnimationPack.Name = "AnimationPack"
+            AnimationPack.Parent = FreeAnimationPack
+            AnimationPack.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            AnimationPack.BorderSizePixel = 0
+            AnimationPack.Position = UDim2.new(0, 0, 0.388007045, 0)
+            AnimationPack.Size = UDim2.new(0, 100, 0, 20)
+            AnimationPack.Font = Enum.Font.SourceSansBold
+            AnimationPack.Text = "Animations"
+            AnimationPack.TextColor3 = Color3.fromRGB(0, 0, 0)
+            AnimationPack.TextSize = 18.000
+            AnimationPack.MouseButton1Click:Connect(function()
+                if (Animations.Visible == false) then
+                    Animations.Visible = true
+                end
+            end)
+        
+            Animations.Name = "Animations"
+            Animations.Parent = AnimationPack
+            Animations.Active = true
+            Animations.BackgroundColor3 = Color3.fromRGB(102, 102, 102)
+            Animations.Position = UDim2.new(-0.104712225, 0, -1.54173493, 0)
+            Animations.Size = UDim2.new(0, 120, 0, 195)
+            Animations.Visible = false
+            Animations.CanvasPosition = Vector2.new(0, 60.0000305)
+            Animations.CanvasSize = UDim2.new(0, 0, 1, 235)
+        
+            UIListLayout.Parent = Animations
+            UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            UIListLayout.Padding = UDim.new(0, 2)
+        
+            Lean.Name = "Lean"
+            Lean.Parent = Animations
+            Lean.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            Lean.Size = UDim2.new(1, 0, 0, 30)
+            Lean.Font = Enum.Font.SourceSansBold
+            Lean.Text = "Lean"
+            Lean.TextColor3 = Color3.fromRGB(0, 0, 0)
+            Lean.TextSize = 14.000
+            Lean.MouseButton1Click:Connect(function()
+                stopTracks()
+                loadAnimation("rbxassetid://3152375249")
+            end)
+        
+            Lay.Name = "Lay"
+            Lay.Parent = Animations
+            Lay.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            Lay.Size = UDim2.new(1, 0, 0, 30)
+            Lay.Font = Enum.Font.SourceSansBold
+            Lay.Text = "Lay"
+            Lay.TextColor3 = Color3.fromRGB(0, 0, 0)
+            Lay.TextSize = 14.000
+            Lay.MouseButton1Click:Connect(function()
+                stopTracks()
+                loadAnimation("rbxassetid://3152378852")
+            end)
+        
+            Dance1.Name = "Dance1"
+            Dance1.Parent = Animations
+            Dance1.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            Dance1.Size = UDim2.new(1, 0, 0, 30)
+            Dance1.Font = Enum.Font.SourceSansBold
+            Dance1.Text = "Dance1"
+            Dance1.TextColor3 = Color3.fromRGB(0, 0, 0)
+            Dance1.TextSize = 14.000
+            Dance1.MouseButton1Click:Connect(function()
+                stopTracks()
+                loadAnimation("rbxassetid://3189773368")
+            end)
+        
+            Dance2.Name = "Dance2"
+            Dance2.Parent = Animations
+            Dance2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            Dance2.Size = UDim2.new(1, 0, 0, 30)
+            Dance2.Font = Enum.Font.SourceSansBold
+            Dance2.Text = "Dance2"
+            Dance2.TextColor3 = Color3.fromRGB(0, 0, 0)
+            Dance2.TextSize = 14.000
+            Dance2.MouseButton1Click:Connect(function()
+                stopTracks()
+                loadAnimation("rbxassetid://3189776546")
+            end)
+        
+            Greet.Name = "Greet"
+            Greet.Parent = Animations
+            Greet.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            Greet.Size = UDim2.new(1, 0, 0, 30)
+            Greet.Font = Enum.Font.SourceSansBold
+            Greet.Text = "Greet"
+            Greet.TextColor3 = Color3.fromRGB(0, 0, 0)
+            Greet.TextSize = 14.000
+            Greet.MouseButton1Click:Connect(function()
+                stopTracks()
+                loadAnimation("rbxassetid://3189777795")
+            end)
+        
+            ChestPump.Name = "ChestPump"
+            ChestPump.Parent = Animations
+            ChestPump.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            ChestPump.Size = UDim2.new(1, 0, 0, 30)
+            ChestPump.Font = Enum.Font.SourceSansBold
+            ChestPump.Text = "Chest Pump"
+            ChestPump.TextColor3 = Color3.fromRGB(0, 0, 0)
+            ChestPump.TextSize = 14.000
+            ChestPump.MouseButton1Click:Connect(function()
+                stopTracks()
+                loadAnimation("rbxassetid://3189779152")
+            end)
+        
+            Praying.Name = "Praying"
+            Praying.Parent = Animations
+            Praying.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            Praying.Size = UDim2.new(1, 0, 0, 30)
+            Praying.Font = Enum.Font.SourceSansBold
+            Praying.Text = "Praying"
+            Praying.TextColor3 = Color3.fromRGB(0, 0, 0)
+            Praying.TextSize = 14.000
+            Praying.MouseButton1Click:Connect(function()
+                stopTracks()
+                loadAnimation("rbxassetid://3487719500")
+            end)
+        
+            Stop.Name = "Stop"
+            Stop.Parent = Animations
+            Stop.BackgroundColor3 = Color3.fromRGB(255, 112, 112)
+            Stop.Size = UDim2.new(1, 0, 0, 30)
+            Stop.Font = Enum.Font.SourceSansBold
+            Stop.Text = "Stop Animation"
+            Stop.TextColor3 = Color3.fromRGB(0, 0, 0)
+            Stop.TextSize = 14.000
+            Stop.MouseButton1Click:Connect(function()
+                stopTracks()
+            end)
+            --close gui
+            local plr = game.Players.LocalPlayer
+        
+            plr:GetMouse().KeyDown:Connect(function(K)
+                if K == "p" then
+                    Animations.Visible = false
+                end
+            end)
+        warn("loaded")
+  	end    
+})
+
+
+
+local Section = DH:AddSection({
+	Name = "CamLock WhiteList"
+})
+
+DH:AddTextbox({
+    Name = "Add to Whitelist",
+    Default = "",
+    TextDisappear = true,
+    Callback = function(Value)
+        table.insert(whitelist, Value)
+        print("Added to whitelist: " .. Value)
+    end
+})
+
+DH:AddTextbox({
+    Name = "Remove from Whitelist",
+    Default = "",
+    TextDisappear = true,
+    Callback = function(Value)
+        local index = table.find(whitelist, Value)
+        if index then
+            table.remove(whitelist, index)
+            print("Removed from whitelist: " .. Value)
+        end
+    end
+})
+
+-- ServerScriptService.Script
+
+local Players = game:GetService("Players")
+local Chat = game:GetService("Chat")
+
+-- Сообщение по умолчанию
+local defaultMessage = "RezCokk gg"
+
+-- Функция для отправки сообщения в чат
+local function sendMessage(message, player)
+    local character = player.Character
+    if character then
+        local head = character:FindFirstChild("Head")
+        if head then
+            Chat:Chat(head, message, Enum.ChatColor.Red)
+        end
+    end
+end
+
+-- StarterPlayerScripts.LocalScript
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+local ChatEvents = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents")
+local SayMessageRequest = ChatEvents:WaitForChild("SayMessageRequest")
+
+-- Функция для отправки сообщения в чат
+local function say(message)
+    SayMessageRequest:FireServer(message, "All")
+end
+
+-- Обработчик нажатия клавиши
+local function onKeyPress(input, gameProcessedEvent)
+    if gameProcessedEvent then return end -- Игнорируем нажатия, обработанные другими UI
+
+    if input.KeyCode == Enum.KeyCode.Z then
+        say("RezCokk is gg")
+    end
+end
+
+-- Подключаем обработчик к событию ввода
+UserInputService.InputBegan:Connect(onKeyPress)
+
+
