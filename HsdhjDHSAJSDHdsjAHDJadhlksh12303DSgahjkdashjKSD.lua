@@ -205,6 +205,8 @@ local Section = Tab:AddSection({
 	Name = "Player"
 })
 
+
+
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local player = game.Players.LocalPlayer
@@ -301,6 +303,57 @@ Tab:AddSlider({
         game.Workspace.CurrentCamera.FieldOfView = Value
     end    
 })
+
+local hitboxParts = {}
+
+-- Function to create a 3D outline around a given object
+local function create3DOutline(object)
+    local size = object.Size
+    local positions = {
+        Vector3.new(0, size.Y/2, 0), -- Top
+        Vector3.new(0, -size.Y/2, 0), -- Bottom
+        Vector3.new(size.X/2, 0, 0), -- Front
+        Vector3.new(-size.X/2, 0, 0), -- Back
+        Vector3.new(0, 0, size.Z/2), -- Right
+        Vector3.new(0, 0, -size.Z/2) -- Left
+    }
+    
+    for i, pos in pairs(positions) do
+        local part = Instance.new("Part")
+        part.Size = Vector3.new(size.X, 0.2, size.Z) -- Adjust the size to create a thin outline
+        part.CFrame = object.CFrame * CFrame.new(pos)
+        part.Anchored = true
+        part.CanCollide = false
+        part.Transparency = 0.5
+        part.Color = Color3.fromRGB(255, 0, 0)
+        part.Parent = object.Parent
+        
+        table.insert(hitboxParts, part)
+    end
+end
+
+-- Function to toggle the hitbox
+local function toggleHitbox(state)
+    if state then
+        create3DOutline(workspace.TargetObject) -- Replace 'TargetObject' with your object name
+    else
+        for _, part in pairs(hitboxParts) do
+            part:Destroy()
+        end
+        hitboxParts = {}
+    end
+end
+
+
+VS:AddToggle({
+	Name = "This is a toggle!",
+	Default = false,
+	Callback = function(Value)
+		print(Value)
+		toggleHitbox(Value)
+	end    
+})
+
 
 local camLockEnabled = false
 local targetPlayer = nil
