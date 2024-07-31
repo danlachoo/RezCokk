@@ -306,31 +306,24 @@ Tab:AddSlider({
 
 local Players = game:GetService("Players")
 local hitboxes = {}
-local weaponDisplay = {}
-local usernameDisplay = {}
+local selectionBoxes = {}
+local selectedColor = Color3.fromRGB(255, 0, 0)
 
--- Function to create a rectangular hitbox for a player's character
+-- Function to create a glowing hitbox for a player's character
 local function createHitbox(character)
     local torso = character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
     if torso then
-        local hitbox = Instance.new("Part")
-        hitbox.Size = Vector3.new(4, 7, 2)  -- Size of the hitbox
-        hitbox.CFrame = torso.CFrame
-        hitbox.Anchored = false
-        hitbox.Transparency = 0.5
-        hitbox.Color = Color3.fromRGB(255, 0, 0)
-        hitbox.CanCollide = false
-        hitbox.Parent = character
+        local selectionBox = Instance.new("SelectionBox")
+        selectionBox.Adornee = character
+        selectionBox.LineThickness = 0.05
+        selectionBox.SurfaceTransparency = 0.5
+        selectionBox.Color3 = selectedColor
+        selectionBox.Parent = character
 
-        local weld = Instance.new("WeldConstraint")
-        weld.Part0 = torso
-        weld.Part1 = hitbox
-        weld.Parent = torso
-
-        hitboxes[character] = hitbox
+        hitboxes[character] = selectionBox
 
         -- Create BillboardGui for weapon and username
-        local billboard = Instance.new("BillboardGui", hitbox)
+        local billboard = Instance.new("BillboardGui", character)
         billboard.Size = UDim2.new(2, 0, 1, 0)
         billboard.StudsOffset = Vector3.new(0, 5, 0)
         billboard.AlwaysOnTop = true
@@ -350,8 +343,7 @@ local function createHitbox(character)
         weaponLabel.TextColor3 = Color3.new(1, 1, 1)
         weaponLabel.BackgroundTransparency = 1
 
-        weaponDisplay[character] = weaponLabel
-        usernameDisplay[character] = usernameLabel
+        selectionBoxes[character] = {selectionBox, weaponLabel, usernameLabel}
     end
 end
 
@@ -360,36 +352,47 @@ local function removeHitbox(character)
     if hitboxes[character] then
         hitboxes[character]:Destroy()
         hitboxes[character] = nil
-        weaponDisplay[character] = nil
-        usernameDisplay[character] = nil
+        selectionBoxes[character] = nil
+    end
+end
+
+-- Function to update the color of all hitboxes
+local function updateHitboxColors()
+    for character, elements in pairs(selectionBoxes) do
+        local selectionBox = elements[1]
+        selectionBox.Color3 = selectedColor
     end
 end
 
 -- Function to toggle hitboxes on or off
 local function toggleHitboxes(state)
-    for _, hitbox in pairs(hitboxes) do
-        hitbox.Transparency = state and 0.5 or 1
+    for character, elements in pairs(selectionBoxes) do
+        local selectionBox = elements[1]
+        selectionBox.Visible = state
     end
 end
 
 -- Function to toggle weapon display on or off
 local function toggleWeapon(state)
-    for _, label in pairs(weaponDisplay) do
-        label.Visible = state
+    for character, elements in pairs(selectionBoxes) do
+        local weaponLabel = elements[2]
+        weaponLabel.Visible = state
     end
 end
 
 -- Function to toggle username display on or off
 local function toggleUsername(state)
-    for _, label in pairs(usernameDisplay) do
-        label.Visible = state
+    for character, elements in pairs(selectionBoxes) do
+        local usernameLabel = elements[3]
+        usernameLabel.Visible = state
     end
 end
 
 -- Function to update the weapon display
 local function updateWeapon(character)
-    local weaponLabel = weaponDisplay[character]
-    if weaponLabel then
+    local elements = selectionBoxes[character]
+    if elements then
+        local weaponLabel = elements[2]
         local weapon = character:FindFirstChildOfClass("Tool")
         if weapon then
             weaponLabel.Text = weapon.Name
@@ -444,7 +447,10 @@ Players.PlayerRemoving:Connect(function(player)
     end
 end)
 
-VS:AddToggle({
+-- Setting up the GUI with toggles and color picker
+local Tab = {} -- This should be your actual tab object where you add the UI elements
+
+Tab:AddToggle({
     Name = "Show/Hide Hitboxes",
     Default = false,
     Callback = function(value)
@@ -452,7 +458,7 @@ VS:AddToggle({
     end    
 })
 
-VS:AddToggle({
+Tab:AddToggle({
     Name = "Show/Hide Weapon",
     Default = false,
     Callback = function(value)
@@ -460,13 +466,25 @@ VS:AddToggle({
     end    
 })
 
-VS:AddToggle({
+Tab:AddToggle({
     Name = "Show/Hide Username",
     Default = false,
     Callback = function(value)
         toggleUsername(value)
     end    
 })
+
+Tab:AddColorpicker({
+    Name = "Colorpicker",
+    Default = Color3.fromRGB(255, 0, 0),
+    Callback = function(value)
+        selectedColor = value
+        updateHitboxColors()
+    end    
+})
+
+
+
 
 
 local camLockEnabled = false
