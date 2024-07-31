@@ -1,1 +1,278 @@
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
 
+-- Создаем GUI для уведомлений
+local player = Players.LocalPlayer
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+
+-- Функция для создания уведомлений
+local function createNotification(title, message)
+    local notificationFrame = Instance.new("Frame", screenGui)
+    local notificationTitle = Instance.new("TextLabel", notificationFrame)
+    local notificationMessage = Instance.new("TextLabel", notificationFrame)
+
+    -- Настройки начальных значений для уведомления
+    notificationFrame.AnchorPoint = Vector2.new(1, 1)
+    notificationFrame.Position = UDim2.new(1, -10, 1, -10)  -- Позиция справа снизу
+    notificationFrame.Size = UDim2.new(0, 200, 0, 60)
+    notificationFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+    notificationFrame.BorderSizePixel = 0
+    notificationFrame.BackgroundTransparency = 0.5
+
+    notificationTitle.Text = title
+    notificationTitle.Size = UDim2.new(1, -10, 0.5, -5)
+    notificationTitle.Position = UDim2.new(0, 5, 0, 5)
+    notificationTitle.BackgroundTransparency = 1
+    notificationTitle.TextColor3 = Color3.new(1, 1, 1)
+    notificationTitle.TextScaled = true
+
+    notificationMessage.Text = message
+    notificationMessage.Size = UDim2.new(1, -10, 0.5, -5)
+    notificationMessage.Position = UDim2.new(0, 5, 0.5, 0)
+    notificationMessage.BackgroundTransparency = 1
+    notificationMessage.TextColor3 = Color3.new(1, 1, 1)
+    notificationMessage.TextScaled = true
+
+    local uiCornerNotification = Instance.new("UICorner", notificationFrame)
+    uiCornerNotification.CornerRadius = UDim.new(0, 10) -- Закругление углов
+
+    -- Создаем tween для появления уведомления
+    local notificationTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local notificationAppearGoals = {BackgroundTransparency = 0.5, Position = UDim2.new(1, -10, 1, -70)}
+    local notificationDisappearGoals = {BackgroundTransparency = 1, Position = UDim2.new(1, -10, 1, -10)}
+
+    local notificationAppearTween = TweenService:Create(notificationFrame, notificationTweenInfo, notificationAppearGoals)
+    local notificationDisappearTween = TweenService:Create(notificationFrame, notificationTweenInfo, notificationDisappearGoals)
+
+    -- Создаем tween для исчезновения текста
+    local textFadeOutGoals = {TextTransparency = 1}
+    local titleFadeOutTween = TweenService:Create(notificationTitle, notificationTweenInfo, textFadeOutGoals)
+    local messageFadeOutTween = TweenService:Create(notificationMessage, notificationTweenInfo, textFadeOutGoals)
+
+    -- Показ уведомления
+    notificationAppearTween:Play()
+    wait(3) -- Уведомление отображается в течение 3 секунд
+    titleFadeOutTween:Play()
+    messageFadeOutTween:Play()
+    notificationDisappearTween:Play()
+
+    notificationDisappearTween.Completed:Connect(function()
+        notificationFrame:Destroy()
+    end)
+end
+
+-- Показ уведомления при инжекте скрипта
+createNotification("RezCokk", "Made by danabro9, support - RezCkAlt")
+
+-- Создаем GUI для ввода ключа
+local keyScreenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+local frame = Instance.new("Frame", keyScreenGui)
+local imageLabel = Instance.new("ImageLabel", frame)
+local textLabel = Instance.new("TextLabel", frame)
+local textBox = Instance.new("TextBox", frame)
+local errorLabel = Instance.new("TextLabel", frame)
+
+-- Настройки начальных значений
+keyScreenGui.Enabled = false
+frame.AnchorPoint = Vector2.new(0.5, 0.5)
+frame.Position = UDim2.new(0.5, 0, 0.5, 0)
+frame.Size = UDim2.new(0, 0, 0, 0)
+frame.BackgroundColor3 = Color3.new(0, 0, 0)
+frame.BorderSizePixel = 0
+
+imageLabel.Image = "rbxassetid://18663149111"
+imageLabel.Size = UDim2.new(0, 126, 0, 113)
+imageLabel.Position = UDim2.new(0.129, 0, 0.091, 0)
+imageLabel.BackgroundTransparency = 1
+imageLabel.ImageTransparency = 1 -- Изначально прозрачный
+
+textLabel.Text = "RezCokk"
+textLabel.Size = UDim2.new(0, 170, 0, 50)
+textLabel.Position = UDim2.new(0, 0, 0.747, 0)
+textLabel.BackgroundTransparency = 1
+textLabel.TextColor3 = Color3.new(1, 1, 1)
+textLabel.TextTransparency = 1 -- Изначально прозрачный
+textLabel.TextScaled = true
+
+textBox.Size = UDim2.new(0, 155, 0, 43)
+textBox.Position = UDim2.new(0.053, 0, 0.747, 0)
+textBox.BackgroundTransparency = 1
+textBox.TextTransparency = 1
+textBox.PlaceholderText = "Enter key"
+textBox.Text = ""
+textBox.TextScaled = true
+textBox.BackgroundColor3 = Color3.new(70/255, 70/255, 70/255)
+textBox.TextColor3 = Color3.new(1, 1, 1) -- Белый цвет текста
+textBox.Visible = false
+
+errorLabel.Size = UDim2.new(0, 155, 0, 43)
+errorLabel.Position = UDim2.new(0.053, 0, 0.747, 0)
+errorLabel.BackgroundTransparency = 1
+errorLabel.TextTransparency = 1
+errorLabel.Text = "Incorrect key. Try again."
+errorLabel.TextColor3 = Color3.new(1, 0, 0) -- Красный цвет текста ошибки
+errorLabel.TextScaled = true
+errorLabel.Visible = false
+
+local uiCorner = Instance.new("UICorner", textBox)
+uiCorner.CornerRadius = UDim.new(0, 10) -- Закругление углов
+
+-- Создаем tween для открытия
+local openTweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local openTweenGoals = {Size = UDim2.new(0, 170, 0, 198)}
+
+local openTween = TweenService:Create(frame, openTweenInfo, openTweenGoals)
+
+-- Создаем tween для появления текста и иконки
+local appearTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local appearTextGoals = {TextTransparency = 0}
+local appearImageGoals = {ImageTransparency = 0}
+local appearBoxGoals = {TextTransparency = 0, BackgroundTransparency = 0}
+
+local textAppearTween = TweenService:Create(textLabel, appearTweenInfo, appearTextGoals)
+local imageAppearTween = TweenService:Create(imageLabel, appearTweenInfo, appearImageGoals)
+local boxAppearTween = TweenService:Create(textBox, appearTweenInfo, appearBoxGoals)
+
+-- Создаем tween для исчезновения текста и иконки
+local disappearTweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local disappearTextGoals = {TextTransparency = 1}
+local disappearImageGoals = {ImageTransparency = 1}
+
+local textDisappearTween = TweenService:Create(textLabel, disappearTweenInfo, disappearTextGoals)
+local imageDisappearTween = TweenService:Create(imageLabel, disappearTweenInfo, disappearImageGoals)
+
+-- Создаем tween для исчезновения текст бокса и ошибки
+local boxDisappearTweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local boxDisappearGoals = {TextTransparency = 1, BackgroundTransparency = 1}
+local errorDisappearTweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local errorDisappearGoals = {TextTransparency = 1}
+
+local boxDisappearTween = TweenService:Create(textBox, boxDisappearTweenInfo, boxDisappearGoals)
+local errorDisappearTween = TweenService:Create(errorLabel, errorDisappearTweenInfo, errorDisappearGoals)
+
+-- Создаем tween для закрытия
+local closeTweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local closeTweenGoals = {Size = UDim2.new(0, 0, 0, 0)}
+
+local closeTween = TweenService:Create(frame, closeTweenInfo, closeTweenGoals)
+
+-- Функция для открытия GUI
+local function openGUI()
+    keyScreenGui.Enabled = true
+    openTween:Play()
+    openTween.Completed:Connect(function()
+        textAppearTween:Play()
+        imageAppearTween:Play()
+        wait(2) -- Время до исчезновения текста и иконки (2 секунды)
+        textDisappearTween:Play()
+        imageDisappearTween:Play()
+        textDisappearTween.Completed:Connect(function()
+            textBox.Visible = true
+            imageLabel.ImageTransparency = 0
+            boxAppearTween:Play()
+        end)
+    end)
+end
+
+-- Функция для закрытия GUI
+local function closeGUI()
+    imageDisappearTween:Play()
+    imageDisappearTween.Completed:Connect(function()
+        boxDisappearTween:Play()
+        errorDisappearTween:Play()
+        boxDisappearTween.Completed:Connect(function()
+            closeTween:Play()
+            closeTween.Completed:Connect(function()
+                keyScreenGui.Enabled = false
+            end)
+        end)
+    end)
+end
+
+-- Список проверенных пользователей
+local verifiedUsers = {
+    ["danlachoo"] = true,
+    ["Lazy_cat483"] = true
+}
+
+-- Функция для проверки ключа
+local function checkKey()
+    print("Checking key for user:", player.Name)
+    if verifiedUsers[player.Name] then
+        print("User is verified.")
+        closeGUI()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/danlachoo/RezCokk/main/HsdhjDHSAJSDHdsjAHDJadhlksh12303DSgahjkdashjKSD.lua", true))()
+    elseif textBox.Text == "danlacho" then
+        print("Key is correct.")
+        closeGUI()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/danlachoo/RezCokk/main/HsdhjDHSAJSDHdsjAHDJadhlksh12303DSgahjkdashjKSD.lua", true))()
+    else
+        print("Key is incorrect.")
+        errorLabel.Visible = true
+        errorDisappearTween:Play()
+        wait(1) -- Показать сообщение об ошибке в течение 1 секунды
+        errorLabel.TextTransparency = 1 -- Скрыть сообщение об ошибке после его показа
+        createNotification("Error", "Incorrect key. Try again.") -- Уведомление об ошибке
+    end
+end
+
+-- Обработчик для проверки ключа при вводе
+textBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        checkKey()
+    end
+end)
+
+-- Функция для перетаскивания с плавным перемещением
+local dragging, dragStart, startPos
+
+local function onDragStart(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = frame.Position
+    end
+end
+
+local function onDrag(input)
+    if dragging then
+        local delta = input.Position - dragStart
+        local newPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        
+        -- Плавное перемещение с использованием TweenService
+        local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        local tweenGoals = {Position = newPos}
+        local tween = TweenService:Create(frame, tweenInfo, tweenGoals)
+        tween:Play()
+    end
+end
+
+frame.InputBegan:Connect(onDragStart)
+frame.InputChanged:Connect(onDrag)
+
+-- Функция для анимации текста в TextBox
+local function animateText()
+    local textTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local enlargeGoals = {TextSize = textBox.TextSize + 2}
+    local shrinkGoals = {TextSize = textBox.TextSize}
+
+    local enlargeTween = TweenService:Create(textBox, textTweenInfo, enlargeGoals)
+    local shrinkTween = TweenService:Create(textBox, textTweenInfo, shrinkGoals)
+
+    enlargeTween:Play()
+    enlargeTween.Completed:Connect(function()
+        shrinkTween:Play()
+    end)
+end
+
+-- Обработчик для анимации текста при вводе
+textBox:GetPropertyChangedSignal("Text"):Connect(function()
+    animateText()
+end)
+
+-- Показ GUI для ввода ключа для всех игроков
+openGUI()
+
+-- Автоматическое копирование ссылки и показ уведомления
+setclipboard("https://discord.gg/ub8uhv6cYz")
+createNotification("RezCokk", "Discord link copied automatically!")
