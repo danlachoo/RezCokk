@@ -310,6 +310,7 @@ local hitboxes = {}
 
 -- Function to create hitbox parts for a player's character
 local function createHitbox(character)
+    local charHitboxes = {}
     for _, part in pairs(character:GetChildren()) do
         if part:IsA("BasePart") then
             local hitbox = Instance.new("Part")
@@ -319,17 +320,30 @@ local function createHitbox(character)
             hitbox.Transparency = 0.5
             hitbox.Color = Color3.fromRGB(255, 0, 0)
             hitbox.CanCollide = false
-            hitbox.Parent = part
+            hitbox.Parent = character
 
-            table.insert(hitboxes, hitbox)
+            table.insert(charHitboxes, hitbox)
         end
+    end
+    hitboxes[character] = charHitboxes
+end
+
+-- Function to remove hitbox parts for a player's character
+local function removeHitbox(character)
+    if hitboxes[character] then
+        for _, hitbox in pairs(hitboxes[character]) do
+            hitbox:Destroy()
+        end
+        hitboxes[character] = nil
     end
 end
 
 -- Function to toggle hitboxes on or off
 local function toggleHitboxes(state)
-    for _, hitbox in pairs(hitboxes) do
-        hitbox.Transparency = state and 0.5 or 1
+    for _, charHitboxes in pairs(hitboxes) do
+        for _, hitbox in pairs(charHitboxes) do
+            hitbox.Transparency = state and 0.5 or 1
+        end
     end
 end
 
@@ -353,8 +367,15 @@ for _, player in pairs(Players:GetPlayers()) do
     end)
 end
 
--- Toggle button
-VS:AddToggle({
+-- Cleanup hitboxes when the character is removed
+Players.PlayerRemoving:Connect(function(player)
+    if player.Character then
+        removeHitbox(player.Character)
+    end
+end)
+
+
+Tab:AddToggle({
     Name = "Show/Hide Hitboxes",
     Default = false,
     Callback = function(value)
