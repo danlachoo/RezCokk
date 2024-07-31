@@ -99,112 +99,6 @@ local function createNotification(title, message)
 end
 
 
--- Определяем сервисы
-local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
-
--- Создаем переменные для UI элементов
-local antiKillEnabled = false
-local healthThreshold = 50 -- Пороговое значение для телепортации
-local teleportDistance = 1000 -- Расстояние для телепортации вверх и вниз
-
--- Хранение текущего состояния телепортации
-local teleportState = {} -- хранит текущее состояние телепортации игрока (под картой или нет)
-
--- Функция для обновления переменной healthThreshold
-local function onHealthThresholdChanged(value)
-    healthThreshold = value
-end
-
--- Функция для включения или отключения анти-килла
-local function onAntiKillToggled(value)
-    antiKillEnabled = value
-end
-
--- Функция для телепортации игрока под карту
-local function teleportUnderMap(player)
-    local character = player.Character
-    if character and character:FindFirstChild("HumanoidRootPart") then
-        local rootPart = character.HumanoidRootPart
-        -- Телепортируем игрока вниз и сохраняем состояние
-        rootPart.CFrame = CFrame.new(rootPart.Position + Vector3.new(0, -teleportDistance, 0))
-        teleportState[player.UserId] = "under"
-    end
-end
-
--- Функция для возвращения игрока обратно на карту
-local function returnToMap(player)
-    local character = player.Character
-    if character and character:FindFirstChild("HumanoidRootPart") then
-        local rootPart = character.HumanoidRootPart
-        -- Возвращаем игрока обратно и сохраняем состояние
-        rootPart.CFrame = CFrame.new(rootPart.Position + Vector3.new(0, teleportDistance, 0))
-        teleportState[player.UserId] = "onMap"
-    end
-end
-
--- Функция для постоянного мониторинга здоровья и телепортации
-local function monitorHealth(humanoid, player)
-    while true do
-        if antiKillEnabled then
-            local health = humanoid.Health
-            local currentState = teleportState[player.UserId]
-            if health <= healthThreshold and currentState ~= "under" then
-                teleportUnderMap(player)
-            elseif health > healthThreshold and currentState == "under" then
-                returnToMap(player)
-            end
-        end
-        wait(1) -- Периодическое ожидание для предотвращения чрезмерной нагрузки
-    end
-end
-
--- Обработка добавления нового игрока
-Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function(character)
-        local humanoid = character:WaitForChild("Humanoid")
-        -- Запускаем мониторинг здоровья для нового игрока
-        coroutine.wrap(function()
-            monitorHealth(humanoid, player)
-        end)()
-    end)
-end)
-
--- Устанавливаем обработчик для игроков, которые уже находятся в игре
-for _, player in ipairs(Players:GetPlayers()) do
-    if player.Character then
-        local humanoid = player.Character:FindFirstChild("Humanoid")
-        if humanoid then
-            -- Запускаем мониторинг здоровья для уже существующих игроков
-            coroutine.wrap(function()
-                monitorHealth(humanoid, player)
-            end)()
-        end
-    end
-end
-
--- Создаем UI элементы
-Tab:AddToggle({
-    Name = "Enable Anti-Kill",
-    Default = false,
-    Callback = function(value)
-        onAntiKillToggled(value)
-    end
-})
-
-Tab:AddSlider({
-    Name = "Health Threshold",
-    Min = 0,
-    Max = 100,
-    Default = 50,
-    Color = Color3.fromRGB(255, 255, 255),
-    Increment = 1,
-    ValueName = "Health",
-    Callback = function(value)
-        onHealthThresholdChanged(value)
-    end
-})
-
 
 -- Adding features to the LT2 tab
 LT2:AddButton({
@@ -306,16 +200,30 @@ LT2:AddButton({
     end
 })
 
+
+local Section = Tab:AddSection({
+	Name = "Player"
+})
+
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local player = game.Players.LocalPlayer
+
 local speed = 16  -- Начальная скорость
+local connection
 
 -- Функция для перемещения с использованием CFrame
-local function moveCharacter()
-    local player = game.Players.LocalPlayer
-    local character = player.Character
+local function moveCharacter(character)
     local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
 
     if humanoidRootPart then
-        RunService.RenderStepped:Connect(function()
+        -- Если уже существует подключение, отключаем его
+        if connection then
+            connection:Disconnect()
+        end
+
+        -- Подключаем событие RenderStepped
+        connection = RunService.RenderStepped:Connect(function()
             if humanoidRootPart then
                 local moveDirection = Vector3.new(0, 0, 0)
 
@@ -340,13 +248,26 @@ local function moveCharacter()
     end
 end
 
+-- Функция для обработки изменения персонажа
+local function onCharacterAdded(character)
+    moveCharacter(character)
+end
+
+-- Подключаем обработчик для добавления персонажа
+player.CharacterAdded:Connect(onCharacterAdded)
+
+-- Если персонаж уже существует, сразу вызываем функцию
+if player.Character then
+    moveCharacter(player.Character)
+end
+
 -- Добавляем ползунок на вкладку
 Tab:AddSlider({
     Name = "CFrame Speed",
     Min = 0,
     Max = 100,
     Default = 16,
-    Color = Color3.fromRGB(255,255,255),
+    Color = Color3.fromRGB(255, 255, 255),
     Increment = 1,
     ValueName = "Speed",
     Callback = function(Value)
@@ -354,8 +275,6 @@ Tab:AddSlider({
     end    
 })
 
--- Запускаем функцию перемещения
-moveCharacter()
 
 Tab:AddSlider({
     Name = "Jump Power",
