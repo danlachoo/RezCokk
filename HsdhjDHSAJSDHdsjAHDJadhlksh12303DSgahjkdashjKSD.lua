@@ -463,6 +463,53 @@ local Section = DH:AddSection({
 	Name = "Other"
 })
 
+-- Define the toggle and callback function
+DH:AddToggle({
+    Name = "fake lag!",
+    Default = false,
+    Callback = function(Value)
+        -- Get the player's character
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        
+        -- Define a variable to control the loop
+        local toggleEnabled = Value
+        
+        -- Function to handle the teleportation loop
+        local function teleportLoop()
+            while toggleEnabled do
+                -- Save the original position
+                local originalPosition = character.HumanoidRootPart.Position
+
+                -- Set the new position under the map
+                local newPosition = originalPosition - Vector3.new(0, 500, 0) -- Adjust the Y offset as needed
+
+                -- Teleport the player under the map
+                character.HumanoidRootPart.CFrame = CFrame.new(newPosition)
+
+                -- Wait for a short duration
+                wait(0.5)
+
+                -- Teleport the player back to the original position
+                character.HumanoidRootPart.CFrame = CFrame.new(originalPosition)
+
+                -- Wait for a short duration before repeating
+                wait(0.5)
+            end
+        end
+
+        -- Start or stop the teleportation loop based on the toggle state
+        if Value then
+            -- Start the teleportation loop in a separate thread
+            spawn(teleportLoop)
+        else
+            -- Stop the teleportation loop
+            toggleEnabled = false
+        end
+    end    
+})
+
+
 DH:AddButton({
 	Name = "Animations Gamepass",
 	Callback = function()
