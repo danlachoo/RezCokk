@@ -304,54 +304,62 @@ Tab:AddSlider({
     end    
 })
 
-local hitboxParts = {}
+local Players = game:GetService("Players")
 
--- Function to create a 3D outline around a given object
-local function create3DOutline(object)
-    local size = object.Size
-    local positions = {
-        Vector3.new(0, size.Y/2, 0), -- Top
-        Vector3.new(0, -size.Y/2, 0), -- Bottom
-        Vector3.new(size.X/2, 0, 0), -- Front
-        Vector3.new(-size.X/2, 0, 0), -- Back
-        Vector3.new(0, 0, size.Z/2), -- Right
-        Vector3.new(0, 0, -size.Z/2) -- Left
-    }
-    
-    for i, pos in pairs(positions) do
-        local part = Instance.new("Part")
-        part.Size = Vector3.new(size.X, 0.2, size.Z) -- Adjust the size to create a thin outline
-        part.CFrame = object.CFrame * CFrame.new(pos)
-        part.Anchored = true
-        part.CanCollide = false
-        part.Transparency = 0.5
-        part.Color = Color3.fromRGB(255, 0, 0)
-        part.Parent = object.Parent
-        
-        table.insert(hitboxParts, part)
-    end
-end
+local hitboxes = {}
 
--- Function to toggle the hitbox
-local function toggleHitbox(state)
-    if state then
-        create3DOutline(workspace.TargetObject) -- Replace 'TargetObject' with your object name
-    else
-        for _, part in pairs(hitboxParts) do
-            part:Destroy()
+-- Function to create hitbox parts for a player's character
+local function createHitbox(character)
+    for _, part in pairs(character:GetChildren()) do
+        if part:IsA("BasePart") then
+            local hitbox = Instance.new("Part")
+            hitbox.Size = part.Size
+            hitbox.CFrame = part.CFrame
+            hitbox.Anchored = true
+            hitbox.Transparency = 0.5
+            hitbox.Color = Color3.fromRGB(255, 0, 0)
+            hitbox.CanCollide = false
+            hitbox.Parent = part
+
+            table.insert(hitboxes, hitbox)
         end
-        hitboxParts = {}
     end
 end
 
+-- Function to toggle hitboxes on or off
+local function toggleHitboxes(state)
+    for _, hitbox in pairs(hitboxes) do
+        hitbox.Transparency = state and 0.5 or 1
+    end
+end
 
+-- Function to handle new players joining
+local function onPlayerAdded(player)
+    player.CharacterAdded:Connect(function(character)
+        wait(1) -- Wait for the character to fully load
+        createHitbox(character)
+    end)
+end
+
+-- Connect the function to all existing players and new players
+Players.PlayerAdded:Connect(onPlayerAdded)
+for _, player in pairs(Players:GetPlayers()) do
+    if player.Character then
+        createHitbox(player.Character)
+    end
+    player.CharacterAdded:Connect(function(character)
+        wait(1)
+        createHitbox(character)
+    end)
+end
+
+-- Toggle button
 VS:AddToggle({
-	Name = "This is a toggle!",
-	Default = false,
-	Callback = function(Value)
-		print(Value)
-		toggleHitbox(Value)
-	end    
+    Name = "Show/Hide Hitboxes",
+    Default = false,
+    Callback = function(value)
+        toggleHitboxes(value)
+    end    
 })
 
 
