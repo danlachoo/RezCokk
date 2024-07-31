@@ -312,7 +312,6 @@ local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local TweenService = game:GetService("TweenService")
 
--- Функция для нахождения ближайшего игрока
 local function getClosestPlayer()
     local Player = Players.LocalPlayer
     local Camera = Workspace.CurrentCamera
@@ -337,7 +336,6 @@ local function getClosestPlayer()
     return closestPlayer
 end
 
--- Функция для обработки удаления игрока
 local function onPlayerRemoved(player)
     if targetPlayer == player then
         if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
@@ -346,10 +344,9 @@ local function onPlayerRemoved(player)
     end
 end
 
--- Функция для обновления управления камерой
 local function updateCamLock()
     while camLockEnabled do
-        wait(0.1)  -- Плавность обновления
+        wait()
         if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
             local targetPosition
             if _G.camLockTarget == "Head" and targetPlayer.Character:FindFirstChild("Head") then
@@ -360,10 +357,8 @@ local function updateCamLock()
 
             local playerRootPart = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
             if playerRootPart then
-                -- Плавное перемещение персонажа
                 if attackMethod == "Normal" then
-                    local direction = (targetPosition - playerRootPart.Position).unit
-                    playerRootPart.CFrame = CFrame.new(playerRootPart.Position + direction * 10, targetPosition)
+                    playerRootPart.CFrame = CFrame.new(playerRootPart.Position, targetPosition)
                 elseif attackMethod == "Above Head" then
                     local radius = 5
                     local height = 10
@@ -371,9 +366,11 @@ local function updateCamLock()
                     local offset = Vector3.new(math.cos(angle) * radius, height, math.sin(angle) * radius)
                     local newPosition = targetPosition + offset
 
-                    -- Плавное перемещение
-                    local direction = (newPosition - playerRootPart.Position).unit
-                    playerRootPart.CFrame = CFrame.new(playerRootPart.Position + direction * 10, targetPosition)
+                    -- Check distance and adjust if necessary
+                    local distance = (playerRootPart.Position - newPosition).magnitude
+                    if distance > radius then
+                        playerRootPart.CFrame = CFrame.new(newPosition, targetPosition)
+                    end
                 elseif attackMethod == "Circle Around" then
                     local radius = 10
                     local speed = 200
@@ -389,20 +386,16 @@ local function updateCamLock()
                 end
             end
 
-            -- Плавное обновление камеры
             local cameraPosition = Workspace.CurrentCamera.CFrame.Position
             local direction = (targetPosition - cameraPosition).unit
-            local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
-            local goal = {CFrame = CFrame.new(cameraPosition, targetPosition)}
-            local tween = TweenService:Create(Workspace.CurrentCamera, tweenInfo, goal)
-            tween:Play()
+            Workspace.CurrentCamera.CFrame = CFrame.new(cameraPosition, targetPosition)
         else
             targetPlayer = getClosestPlayer()
         end
     end
 end
 
--- Подключаем обработчик удаления игрока
+-- Connect to player removal event
 Players.PlayerRemoving:Connect(onPlayerRemoved)
 
 local Section = DH:AddSection({
@@ -422,8 +415,7 @@ DH:AddBind({
             Workspace.CurrentCamera.CameraSubject = Players.LocalPlayer.Character.Humanoid
         end
     end    
-})
-
+}) 
 
 DH:AddSlider({
     Name = "Distance",
