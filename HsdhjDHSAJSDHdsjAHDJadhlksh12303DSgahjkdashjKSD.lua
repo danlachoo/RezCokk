@@ -304,69 +304,6 @@ Tab:AddSlider({
     end    
 })
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
-local platform
-local platformHeight = 5 -- Высота платформы от игрока
-local checkHealthInterval = 1 -- Интервал проверки здоровья в секундах
-
-local function createPlatform()
-    if not platform then
-        platform = Instance.new("Part")
-        platform.Size = Vector3.new(10, 1, 10)
-        platform.Anchored = true
-        platform.CanCollide = true
-        platform.Color = Color3.fromRGB(0, 255, 0) -- Цвет платформы для лучшей видимости
-        platform.Parent = game.Workspace
-    end
-end
-
-local function updatePlatformPosition()
-    if platform and character then
-        local rootPart = character:FindFirstChild("HumanoidRootPart")
-        if rootPart then
-            platform.Position = rootPart.Position - Vector3.new(0, platformHeight, 0)
-        end
-    end
-end
-
-local function removePlatform()
-    if platform then
-        platform:Destroy()
-        platform = nil
-    end
-end
-
--- Основной цикл проверки здоровья
-RunService.RenderStepped:Connect(function()
-    if humanoid.Health <= 30 then
-        local rootPart = character:FindFirstChild("HumanoidRootPart")
-        if rootPart then
-            rootPart.CFrame = CFrame.new(rootPart.Position.X, rootPart.Position.Y + 50, rootPart.Position.Z)
-        end
-        createPlatform()
-        updatePlatformPosition()
-    elseif humanoid.Health > 30 then
-        removePlatform()
-    end
-end)
-
--- Обновляем платформу каждые несколько секунд
-while true do
-    wait(checkHealthInterval)
-    updatePlatformPosition()
-end
-
--- Удаление платформы при смерти персонажа
-character.Humanoid.Died:Connect(function()
-    removePlatform()
-end)
-
-
 
 local camLockEnabled = false
 local targetPlayer = nil
