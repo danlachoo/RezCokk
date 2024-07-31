@@ -305,186 +305,41 @@ Tab:AddSlider({
 })
 
 local Players = game:GetService("Players")
-local hitboxes = {}
-local selectionBoxes = {}
-local selectedColor = Color3.fromRGB(255, 0, 0)
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local platform
 
--- Function to create a glowing hitbox for a player's character
-local function createHitbox(character)
-    local torso = character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
-    if torso then
-        local selectionBox = Instance.new("SelectionBox")
-        selectionBox.Adornee = character
-        selectionBox.LineThickness = 0.05
-        selectionBox.SurfaceTransparency = 0.5
-        selectionBox.Color3 = selectedColor
-        selectionBox.Parent = character
+local function createPlatform()
+    platform = Instance.new("Part")
+    platform.Size = Vector3.new(10, 1, 10)
+    platform.Anchored = true
+    platform.CanCollide = true
+    platform.Position = Vector3.new(character.HumanoidRootPart.Position.X, character.HumanoidRootPart.Position.Y + 50, character.HumanoidRootPart.Position.Z)
+    platform.Parent = game.Workspace
+end
 
-        hitboxes[character] = selectionBox
-
-        -- Create BillboardGui for weapon and username
-        local billboard = Instance.new("BillboardGui", character)
-        billboard.Size = UDim2.new(2, 0, 1, 0)
-        billboard.StudsOffset = Vector3.new(0, 5, 0)
-        billboard.AlwaysOnTop = true
-
-        -- Create TextLabel for username
-        local usernameLabel = Instance.new("TextLabel", billboard)
-        usernameLabel.Size = UDim2.new(1, 0, 0.5, 0)
-        usernameLabel.Position = UDim2.new(0, 0, 0, 0)
-        usernameLabel.Text = character.Name
-        usernameLabel.TextColor3 = Color3.new(1, 1, 1)
-        usernameLabel.BackgroundTransparency = 1
-
-        -- Create TextLabel for weapon
-        local weaponLabel = Instance.new("TextLabel", billboard)
-        weaponLabel.Size = UDim2.new(1, 0, 0.5, 0)
-        weaponLabel.Position = UDim2.new(0, 0, 0.5, 0)
-        weaponLabel.TextColor3 = Color3.new(1, 1, 1)
-        weaponLabel.BackgroundTransparency = 1
-
-        selectionBoxes[character] = {selectionBox, weaponLabel, usernameLabel}
+local function removePlatform()
+    if platform then
+        platform:Destroy()
+        platform = nil
     end
 end
 
--- Function to remove hitbox for a player's character
-local function removeHitbox(character)
-    if hitboxes[character] then
-        hitboxes[character]:Destroy()
-        hitboxes[character] = nil
-        selectionBoxes[character] = nil
-    end
-end
-
--- Function to update the color of all hitboxes
-local function updateHitboxColors()
-    for character, elements in pairs(selectionBoxes) do
-        local selectionBox = elements[1]
-        selectionBox.Color3 = selectedColor
-    end
-end
-
--- Function to toggle hitboxes on or off
-local function toggleHitboxes(state)
-    for character, elements in pairs(selectionBoxes) do
-        local selectionBox = elements[1]
-        selectionBox.Visible = state
-    end
-end
-
--- Function to toggle weapon display on or off
-local function toggleWeapon(state)
-    for character, elements in pairs(selectionBoxes) do
-        local weaponLabel = elements[2]
-        weaponLabel.Visible = state
-    end
-end
-
--- Function to toggle username display on or off
-local function toggleUsername(state)
-    for character, elements in pairs(selectionBoxes) do
-        local usernameLabel = elements[3]
-        usernameLabel.Visible = state
-    end
-end
-
--- Function to update the weapon display
-local function updateWeapon(character)
-    local elements = selectionBoxes[character]
-    if elements then
-        local weaponLabel = elements[2]
-        local weapon = character:FindFirstChildOfClass("Tool")
-        if weapon then
-            weaponLabel.Text = weapon.Name
-        else
-            weaponLabel.Text = "No Weapon"
-        end
-    end
-end
-
--- Function to handle new players joining
-local function onPlayerAdded(player)
-    player.CharacterAdded:Connect(function(character)
-        wait(1) -- Wait for the character to fully load
-        createHitbox(character)
-        updateWeapon(character)
-        character.ChildAdded:Connect(function(child)
-            if child:IsA("Tool") then
-                updateWeapon(character)
-            end
-        end)
-        character.ChildRemoved:Connect(function(child)
-            if child:IsA("Tool") then
-                updateWeapon(character)
-            end
-        end)
-    end)
-end
-
--- Connect the function to all existing players and new players
-Players.PlayerAdded:Connect(onPlayerAdded)
-for _, player in pairs(Players:GetPlayers()) do
-    if player.Character then
-        createHitbox(player.Character)
-        updateWeapon(player.Character)
-        player.Character.ChildAdded:Connect(function(child)
-            if child:IsA("Tool") then
-                updateWeapon(player.Character)
-            end
-        end)
-        player.Character.ChildRemoved:Connect(function(child)
-            if child:IsA("Tool") then
-                updateWeapon(player.Character)
-            end
-        end)
-    end
-end
-
--- Cleanup hitboxes when the character is removed
-Players.PlayerRemoving:Connect(function(player)
-    if player.Character then
-        removeHitbox(player.Character)
+RunService.RenderStepped:Connect(function()
+    if humanoid.Health <= 30 and not platform then
+        local rootPart = character:WaitForChild("HumanoidRootPart")
+        rootPart.CFrame = CFrame.new(rootPart.Position.X, rootPart.Position.Y + 50, rootPart.Position.Z)
+        createPlatform()
+    elseif humanoid.Health > 30 and platform then
+        removePlatform()
     end
 end)
 
--- Setting up the GUI with toggles and color picker
-local Tab = {} -- This should be your actual tab object where you add the UI elements
-
-Tab:AddToggle({
-    Name = "Show/Hide Hitboxes",
-    Default = false,
-    Callback = function(value)
-        toggleHitboxes(value)
-    end    
-})
-
-Tab:AddToggle({
-    Name = "Show/Hide Weapon",
-    Default = false,
-    Callback = function(value)
-        toggleWeapon(value)
-    end    
-})
-
-Tab:AddToggle({
-    Name = "Show/Hide Username",
-    Default = false,
-    Callback = function(value)
-        toggleUsername(value)
-    end    
-})
-
-Tab:AddColorpicker({
-    Name = "Colorpicker",
-    Default = Color3.fromRGB(255, 0, 0),
-    Callback = function(value)
-        selectedColor = value
-        updateHitboxColors()
-    end    
-})
-
-
-
+character.Humanoid.Died:Connect(function()
+    removePlatform()
+end)
 
 
 local camLockEnabled = false
