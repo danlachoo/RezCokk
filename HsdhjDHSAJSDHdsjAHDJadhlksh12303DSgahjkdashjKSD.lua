@@ -14,6 +14,12 @@ local Tab = Window:MakeTab({
     PremiumOnly = false
 })
 
+local VS = Window:MakeTab({
+    Name = "Visuals",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
 local DH = Window:MakeTab({
     Name = "Da hood",
     Icon = "rbxassetid://4483345998",
@@ -91,6 +97,113 @@ local function createNotification(title, message)
         notificationFrame:Destroy()
     end)
 end
+
+
+-- Определяем сервисы
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+
+-- Создаем переменные для UI элементов
+local antiKillEnabled = false
+local healthThreshold = 50 -- Пороговое значение для телепортации
+local teleportDistance = 1000 -- Расстояние для телепортации вверх и вниз
+
+-- Хранение текущего состояния телепортации
+local teleportState = {} -- хранит текущее состояние телепортации игрока (под картой или нет)
+
+-- Функция для обновления переменной healthThreshold
+local function onHealthThresholdChanged(value)
+    healthThreshold = value
+end
+
+-- Функция для включения или отключения анти-килла
+local function onAntiKillToggled(value)
+    antiKillEnabled = value
+end
+
+-- Функция для телепортации игрока под карту
+local function teleportUnderMap(player)
+    local character = player.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        local rootPart = character.HumanoidRootPart
+        -- Телепортируем игрока вниз и сохраняем состояние
+        rootPart.CFrame = CFrame.new(rootPart.Position + Vector3.new(0, -teleportDistance, 0))
+        teleportState[player.UserId] = "under"
+    end
+end
+
+-- Функция для возвращения игрока обратно на карту
+local function returnToMap(player)
+    local character = player.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        local rootPart = character.HumanoidRootPart
+        -- Возвращаем игрока обратно и сохраняем состояние
+        rootPart.CFrame = CFrame.new(rootPart.Position + Vector3.new(0, teleportDistance, 0))
+        teleportState[player.UserId] = "onMap"
+    end
+end
+
+-- Функция для постоянного мониторинга здоровья и телепортации
+local function monitorHealth(humanoid, player)
+    while true do
+        if antiKillEnabled then
+            local health = humanoid.Health
+            local currentState = teleportState[player.UserId]
+            if health <= healthThreshold and currentState ~= "under" then
+                teleportUnderMap(player)
+            elseif health > healthThreshold and currentState == "under" then
+                returnToMap(player)
+            end
+        end
+        wait(1) -- Периодическое ожидание для предотвращения чрезмерной нагрузки
+    end
+end
+
+-- Обработка добавления нового игрока
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        local humanoid = character:WaitForChild("Humanoid")
+        -- Запускаем мониторинг здоровья для нового игрока
+        coroutine.wrap(function()
+            monitorHealth(humanoid, player)
+        end)()
+    end)
+end)
+
+-- Устанавливаем обработчик для игроков, которые уже находятся в игре
+for _, player in ipairs(Players:GetPlayers()) do
+    if player.Character then
+        local humanoid = player.Character:FindFirstChild("Humanoid")
+        if humanoid then
+            -- Запускаем мониторинг здоровья для уже существующих игроков
+            coroutine.wrap(function()
+                monitorHealth(humanoid, player)
+            end)()
+        end
+    end
+end
+
+-- Создаем UI элементы
+Tab:AddToggle({
+    Name = "Enable Anti-Kill",
+    Default = false,
+    Callback = function(value)
+        onAntiKillToggled(value)
+    end
+})
+
+Tab:AddSlider({
+    Name = "Health Threshold",
+    Min = 0,
+    Max = 100,
+    Default = 50,
+    Color = Color3.fromRGB(255, 255, 255),
+    Increment = 1,
+    ValueName = "Health",
+    Callback = function(value)
+        onHealthThresholdChanged(value)
+    end
+})
 
 
 -- Adding features to the LT2 tab
@@ -690,7 +803,6 @@ local function onKeyPress(input, gameProcessedEvent)
     if gameProcessedEvent then return end -- Игнорируем нажатия, обработанные другими UI
 
     if input.KeyCode == Enum.KeyCode.Z then
-        say("RezCokk is gg")
     end
 end
 
