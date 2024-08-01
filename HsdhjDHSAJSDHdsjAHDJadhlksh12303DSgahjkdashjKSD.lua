@@ -99,7 +99,6 @@ local function createNotification(title, message)
 end
 
 
-
 -- Adding features to the LT2 tab
 LT2:AddButton({
     Name = "Wood R us",
@@ -200,32 +199,16 @@ LT2:AddButton({
     end
 })
 
-
-local Section = Tab:AddSection({
-	Name = "Player"
-})
-
-
-
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local player = game.Players.LocalPlayer
-
 local speed = 16  -- Начальная скорость
-local connection
 
 -- Функция для перемещения с использованием CFrame
-local function moveCharacter(character)
+local function moveCharacter()
+    local player = game.Players.LocalPlayer
+    local character = player.Character
     local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
 
     if humanoidRootPart then
-        -- Если уже существует подключение, отключаем его
-        if connection then
-            connection:Disconnect()
-        end
-
-        -- Подключаем событие RenderStepped
-        connection = RunService.RenderStepped:Connect(function()
+        RunService.RenderStepped:Connect(function()
             if humanoidRootPart then
                 local moveDirection = Vector3.new(0, 0, 0)
 
@@ -250,26 +233,13 @@ local function moveCharacter(character)
     end
 end
 
--- Функция для обработки изменения персонажа
-local function onCharacterAdded(character)
-    moveCharacter(character)
-end
-
--- Подключаем обработчик для добавления персонажа
-player.CharacterAdded:Connect(onCharacterAdded)
-
--- Если персонаж уже существует, сразу вызываем функцию
-if player.Character then
-    moveCharacter(player.Character)
-end
-
 -- Добавляем ползунок на вкладку
 Tab:AddSlider({
     Name = "CFrame Speed",
     Min = 0,
     Max = 100,
     Default = 16,
-    Color = Color3.fromRGB(255, 255, 255),
+    Color = Color3.fromRGB(255,255,255),
     Increment = 1,
     ValueName = "Speed",
     Callback = function(Value)
@@ -277,6 +247,8 @@ Tab:AddSlider({
     end    
 })
 
+-- Запускаем функцию перемещения
+moveCharacter()
 
 Tab:AddSlider({
     Name = "Jump Power",
@@ -303,7 +275,6 @@ Tab:AddSlider({
         game.Workspace.CurrentCamera.FieldOfView = Value
     end    
 })
-
 
 local camLockEnabled = false
 local targetPlayer = nil
@@ -382,10 +353,22 @@ local function updateCamLock()
                     playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
                 elseif attackMethod == "Air" then
                     local radius = 7
-                    local speed = 100
+                    local speed = 400  -- Increase speed for faster rotation
                     local angle = tick() * speed
                     local offset = Vector3.new(math.cos(angle) * radius, 5, math.sin(angle) * radius)
                     playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
+                elseif attackMethod == "Underneath" then
+                    local offset = Vector3.new(0, -3, 0)  -- Position your character 3 studs below the target
+                    playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
+                elseif attackMethod == "Rotate Underneath" then
+                    local radius = 5
+                    local speed = 100
+                    local angle = tick() * speed
+                    local offset = Vector3.new(math.cos(angle) * radius, -3, math.sin(angle) * radius)
+                    playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
+                elseif attackMethod == "Behind" then
+                    local offset = Vector3.new(0, 0, -3)  -- Position your character directly behind the target
+                    playerRootPart.CFrame = CFrame.new(targetPosition - offset, targetPosition)
                 end
             end
 
@@ -418,7 +401,7 @@ DH:AddBind({
             Workspace.CurrentCamera.CameraSubject = Players.LocalPlayer.Character.Humanoid
         end
     end    
-}) 
+})
 
 DH:AddSlider({
     Name = "Distance",
@@ -445,11 +428,12 @@ DH:AddDropdown({
 DH:AddDropdown({
     Name = "Attack Method",
     Default = "Normal",
-    Options = {"Normal", "Above Head", "Circle Around", "Air"},
+    Options = {"Normal", "Above Head", "Circle Around", "Air", "Underneath", "Rotate Underneath", "Behind"},
     Callback = function(Value)
         attackMethod = Value
     end    
 })
+
 
 UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
     if input.KeyCode == Enum.KeyCode.Q and camLockEnabled and not gameProcessedEvent then
@@ -463,52 +447,26 @@ local Section = DH:AddSection({
 	Name = "Other"
 })
 
--- Define the toggle and callback function
+local lastPosition
+
 DH:AddToggle({
-    Name = "fake lag!",
-    Default = false,
-    Callback = function(Value)
-        -- Get the player's character
-        local player = game.Players.LocalPlayer
-        local character = player.Character or player.CharacterAdded:Wait()
-        
-        -- Define a variable to control the loop
-        local toggleEnabled = Value
-        
-        -- Function to handle the teleportation loop
-        local function teleportLoop()
-            while toggleEnabled do
-                -- Save the original position
-                local originalPosition = character.HumanoidRootPart.Position
-
-                -- Set the new position under the map
-                local newPosition = originalPosition - Vector3.new(0, 500, 0) -- Adjust the Y offset as needed
-
-                -- Teleport the player under the map
-                character.HumanoidRootPart.CFrame = CFrame.new(newPosition)
-
-                -- Wait for a short duration
-                wait(0.5)
-
-                -- Teleport the player back to the original position
-                character.HumanoidRootPart.CFrame = CFrame.new(originalPosition)
-
-                -- Wait for a short duration before repeating
-                wait(0.5)
-            end
-        end
-
-        -- Start or stop the teleportation loop based on the toggle state
-        if Value then
-            -- Start the teleportation loop in a separate thread
-            spawn(teleportLoop)
-        else
-            -- Stop the teleportation loop
-            toggleEnabled = false
-        end
-    end    
+	Name = "Teleport under map!",
+	Default = false,
+	Callback = function(Value)
+		if Value then
+			-- Запоминаем текущую позицию
+			lastPosition = character.HumanoidRootPart.Position
+			-- Телепортируем игрока под карту
+			local newPosition = lastPosition - Vector3.new(0, 50, 0) -- 50 единиц вниз
+			character.HumanoidRootPart.CFrame = CFrame.new(newPosition)
+		else
+			-- Телепортируем игрока обратно на сохраненную позицию
+			if lastPosition then
+				character.HumanoidRootPart.CFrame = CFrame.new(lastPosition)
+			end
+		end
+	end    
 })
-
 
 DH:AddButton({
 	Name = "Animations Gamepass",
