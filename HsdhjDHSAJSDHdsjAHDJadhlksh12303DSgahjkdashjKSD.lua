@@ -15,7 +15,7 @@ local Tab = Window:MakeTab({
 })
 
 local VS = Window:MakeTab({
-    Name = "Visuals",
+    Name = "Esp",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
@@ -447,26 +447,7 @@ local Section = DH:AddSection({
 	Name = "Other"
 })
 
-local lastPosition
 
-DH:AddToggle({
-	Name = "Teleport under map!",
-	Default = false,
-	Callback = function(Value)
-		if Value then
-			-- Запоминаем текущую позицию
-			lastPosition = character.HumanoidRootPart.Position
-			-- Телепортируем игрока под карту
-			local newPosition = lastPosition - Vector3.new(0, 50, 0) -- 50 единиц вниз
-			character.HumanoidRootPart.CFrame = CFrame.new(newPosition)
-		else
-			-- Телепортируем игрока обратно на сохраненную позицию
-			if lastPosition then
-				character.HumanoidRootPart.CFrame = CFrame.new(lastPosition)
-			end
-		end
-	end    
-})
 
 DH:AddButton({
 	Name = "Animations Gamepass",
@@ -665,6 +646,34 @@ DH:AddButton({
   	end    
 })
 
+DH:AddButton({
+	Name = "Fly [X]",
+	Callback = function()
+      		loadstring(game:HttpGet("https://pastebin.com/raw/sUA9m6M6"))()
+  	end    
+})
+
+DH:AddButton({
+	Name = "No recoil",
+	Callback = function()
+      		local player = game.Players.LocalPlayer
+		for i,v in pairs(game:GetService('Workspace'):GetChildren()) do
+			if v:IsA('Camera') then
+				v:Destroy()
+			end
+		end
+		local newcam = Instance.new('Camera')
+		newcam.Parent = game:GetService('Workspace')
+		newcam.Name = 'Camera'
+		newcam.CameraType = 'Custom'
+		newcam.CameraSubject = player.Character:FindFirstChildWhichIsA('Humanoid')
+		newcam.HeadLocked = true
+		newcam.HeadScale = 1 
+        newcam.Workspace.CurrentCamera.FieldOfView = 120
+  	end    
+})
+
+
 
 
 local Section = DH:AddSection({
@@ -694,46 +703,215 @@ DH:AddTextbox({
     end
 })
 
--- ServerScriptService.Script
+-- ESP ------------------------------------
 
-local Players = game:GetService("Players")
-local Chat = game:GetService("Chat")
+local Section = VS:AddSection({
+	Name = "Esp"
+})
 
--- Сообщение по умолчанию
-local defaultMessage = "RezCokk gg"
+-- Создаем переменную для хранения выбранного цвета
+local selectedColor = Color3.fromRGB(255, 0, 0)
 
--- Функция для отправки сообщения в чат
-local function sendMessage(message, player)
-    local character = player.Character
-    if character then
-        local head = character:FindFirstChild("Head")
-        if head then
-            Chat:Chat(head, message, Enum.ChatColor.Red)
+-- Функция для обновления Highlight всех игроков
+local function updateHighlights()
+    for _, player in pairs(game.Players:GetPlayers()) do
+        local character = player.Character
+        if character then
+            local highlight = character:FindFirstChild("ToggleHighlight")
+            if highlight then
+                highlight.FillColor = selectedColor -- Устанавливаем цвет обводки
+            end
         end
     end
 end
 
--- StarterPlayerScripts.LocalScript
+-- Переключатель для включения/выключения Highlight
+VS:AddToggle({
+    Name = "Enable Esp",
+    Default = false,
+    Callback = function(Value)
+        for _, player in pairs(game.Players:GetPlayers()) do
+            local character = player.Character or player.CharacterAdded:Wait()
+            
+            if Value then
+                -- Создаем Highlight и присоединяем его к персонажу
+                local highlight = Instance.new("Highlight")
+                highlight.Name = "ToggleHighlight" -- Даем уникальное имя для легкого нахождения
+                highlight.Parent = character
+                highlight.FillColor = selectedColor -- Устанавливаем цвет обводки
+                highlight.Adornee = character
+            else
+                -- Находим и удаляем Highlight, если он существует
+                local existingHighlight = character:FindFirstChild("ToggleHighlight")
+                if existingHighlight then
+                    existingHighlight:Destroy()
+                end
+            end
+        end
+        
+        -- Обновляем Highlight для всех игроков
+        updateHighlights()
+        
+        print(Value)
+    end
+})
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local UserInputService = game:GetService("UserInputService")
-local ChatEvents = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents")
-local SayMessageRequest = ChatEvents:WaitForChild("SayMessageRequest")
+-- Выбор цвета с ColorPicker
+VS:AddColorpicker({
+    Name = "Esp Color",
+    Default = Color3.fromRGB(255, 0, 0),
+    Callback = function(Value)
+        selectedColor = Value
+        updateHighlights() -- Обновляем цвета Highlight для всех игроков
+        print(Value)
+    end
+})
 
--- Функция для отправки сообщения в чат
-local function say(message)
-    SayMessageRequest:FireServer(message, "All")
-end
+local Section = VS:AddSection({
+	Name = "Texts"
+})
 
--- Обработчик нажатия клавиши
-local function onKeyPress(input, gameProcessedEvent)
-    if gameProcessedEvent then return end -- Игнорируем нажатия, обработанные другими UI
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
 
-    if input.KeyCode == Enum.KeyCode.Z then
+-- Функция для создания и обновления текстовой метки под игроком
+local function setupPlayerGui()
+    local function onCharacterAdded(character)
+        if not character then return end
+
+        local head = character:FindFirstChild("Head")
+        if not head then return end
+
+        -- Создание BillboardGui
+        local billboardGui = Instance.new("BillboardGui")
+        billboardGui.Adornee = head
+        billboardGui.Parent = head
+        billboardGui.Size = UDim2.new(0, 100, 0, 50)
+        billboardGui.StudsOffset = Vector3.new(0, 2, 0) -- Позиционирование текста над головой
+
+        -- Создание TextLabel
+        local textLabel = Instance.new("TextLabel")
+        textLabel.Parent = billboardGui
+        textLabel.Size = UDim2.new(1, 0, 1, 0)
+        textLabel.BackgroundTransparency = 1
+        textLabel.TextScaled = true
+        textLabel.Text = "[None]"
+
+        -- Функция для обновления текста
+        local function updateText()
+            -- Найдите инструмент в персонаже (в руках) или в рюкзаке
+            local tool = character:FindFirstChildOfClass("Tool") or player.Backpack:FindFirstChildOfClass("Tool")
+            local toolName = tool and tool.Name or "None"
+            textLabel.Text = "[" .. toolName .. "]"
+        end
+
+        -- Подключение к событиям для обновления текста
+        player.Backpack.ChildAdded:Connect(updateText)
+        player.Backpack.ChildRemoved:Connect(updateText)
+        character.ChildAdded:Connect(updateText)
+        character.ChildRemoved:Connect(updateText)
+
+        -- Обновление текста при изменении предметов в руках
+        local function onToolEquipped(tool)
+            updateText()
+        end
+
+        local function onToolUnequipped()
+            updateText()
+        end
+
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.Equipped:Connect(onToolEquipped)
+            humanoid.Unequipped:Connect(onToolUnequipped)
+        end
+
+        -- Изначально обновляем текст
+        updateText()
+    end
+
+    -- Подписываемся на событие добавления персонажа
+    player.CharacterAdded:Connect(onCharacterAdded)
+
+    -- Обрабатываем случай, если персонаж уже есть
+    if player.Character then
+        onCharacterAdded(player.Character)
     end
 end
 
--- Подключаем обработчик к событию ввода
-UserInputService.InputBegan:Connect(onKeyPress)
+-- Очистка BillboardGui
+local function clearPlayerGui()
+    local character = player.Character
+    if character then
+        local head = character:FindFirstChild("Head")
+        if head then
+            local billboardGui = head:FindFirstChildOfClass("BillboardGui")
+            if billboardGui then
+                billboardGui:Destroy()
+            end
+        end
+    end
+end
 
 
+
+Tab:AddToggle({
+    Name = "Toggle Text Display",
+    Default = false,
+    Callback = function(isEnabled)
+        if isEnabled then
+            setupPlayerGui()
+        else
+            clearPlayerGui()
+        end
+    end
+})
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Camera = game.Workspace.CurrentCamera
+
+local targetPlayer = nil
+
+-- Функция для слежения за игроком
+local function startSpectating(playerName)
+    local player = Players:FindFirstChild(playerName)
+    if player and player.Character then
+        targetPlayer = player
+        Camera.CameraSubject = player.Character:FindFirstChild("Humanoid")
+    else
+        print("Player not found or not in the game.")
+    end
+end
+
+-- Функция для прекращения слежения
+local function stopSpectating()
+    targetPlayer = nil
+    Camera.CameraSubject = LocalPlayer.Character:FindFirstChild("Humanoid")
+end
+
+-- Функция для обработки сообщений в чате
+local function onChatted(player, message)
+    if player == LocalPlayer then
+        local command, argument = message:match("^(;spec) (%w+)$")
+        if command == ";spec" and argument then
+            startSpectating(argument)
+        elseif message:lower() == ";unspec" then
+            stopSpectating()
+        end
+    end
+end
+
+-- Подписка на событие чата для всех игроков
+Players.PlayerAdded:Connect(function(player)
+    player.Chatted:Connect(function(message)
+        onChatted(player, message)
+    end)
+end)
+
+-- Подписка на событие чата для уже существующих игроков
+for _, player in ipairs(Players:GetPlayers()) do
+    player.Chatted:Connect(function(message)
+        onChatted(player, message)
+    end)
+end
