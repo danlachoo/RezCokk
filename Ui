@@ -1,11 +1,55 @@
+local OrionLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Orion/main/source'))()
+
+local Window = OrionLib:MakeWindow({
+    Name = "RezCokk",
+    HidePremium = false,
+    IntroText = "RezCokk",
+    SaveConfig = true,
+    ConfigFolder = "RezCokk"
+})
+
+local Tab = Window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local VS = Window:MakeTab({
+    Name = "Esp",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local DH = Window:MakeTab({
+    Name = "Da hood",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local Targets = Window:MakeTab({
+	Name = "Targets",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+
+local MiscTab = Window:MakeTab({
+    Name = "Misc",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local cfg = Window:MakeTab({
+    Name = "Config",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local screenGui = Instance.new("ScreenGui", game.Players.LocalPlayer:WaitForChild("PlayerGui"))
 local TweenService = game:GetService("TweenService")
-local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
--- Создаем GUI для уведомлений
-local player = Players.LocalPlayer
-local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-
--- Функция для создания уведомлений
 local function createNotification(title, message)
     local notificationFrame = Instance.new("Frame", screenGui)
     local notificationTitle = Instance.new("TextLabel", notificationFrame)
@@ -61,218 +105,847 @@ local function createNotification(title, message)
     end)
 end
 
--- Показ уведомления при инжекте скрипта
-createNotification("RezCokk", "Made by danabro9, support - RezCkAlt")
 
--- Создаем GUI для ввода ключа
-local keyScreenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-local frame = Instance.new("Frame", keyScreenGui)
-local imageLabel = Instance.new("ImageLabel", frame)
-local textLabel = Instance.new("TextLabel", frame)
-local textBox = Instance.new("TextBox", frame)
-local errorLabel = Instance.new("TextLabel", frame)
+local speed = 16  -- Начальная скорость
 
--- Настройки начальных значений
-keyScreenGui.Enabled = false
-frame.AnchorPoint = Vector2.new(0.5, 0.5)
-frame.Position = UDim2.new(0.5, 0, 0.5, 0)
-frame.Size = UDim2.new(0, 0, 0, 0)
-frame.BackgroundColor3 = Color3.new(0, 0, 0)
-frame.BorderSizePixel = 0
+-- Функция для перемещения с использованием CFrame
+local function moveCharacter()
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
 
-imageLabel.Image = "rbxassetid://18663149111"
-imageLabel.Size = UDim2.new(0, 126, 0, 113)
-imageLabel.Position = UDim2.new(0.129, 0, 0.091, 0)
-imageLabel.BackgroundTransparency = 1
-imageLabel.ImageTransparency = 1 -- Изначально прозрачный
+    if humanoidRootPart then
+        RunService.RenderStepped:Connect(function()
+            if humanoidRootPart then
+                local moveDirection = Vector3.new(0, 0, 0)
 
-textLabel.Text = "RezCokk"
-textLabel.Size = UDim2.new(0, 170, 0, 50)
-textLabel.Position = UDim2.new(0, 0, 0.747, 0)
-textLabel.BackgroundTransparency = 1
-textLabel.TextColor3 = Color3.new(1, 1, 1)
-textLabel.TextTransparency = 1 -- Изначально прозрачный
-textLabel.TextScaled = true
+                if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+                    moveDirection = moveDirection + humanoidRootPart.CFrame.LookVector
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+                    moveDirection = moveDirection - humanoidRootPart.CFrame.LookVector
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+                    moveDirection = moveDirection - humanoidRootPart.CFrame.RightVector
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+                    moveDirection = moveDirection + humanoidRootPart.CFrame.RightVector
+                end
 
-textBox.Size = UDim2.new(0, 155, 0, 43)
-textBox.Position = UDim2.new(0.053, 0, 0.747, 0)
-textBox.BackgroundTransparency = 1
-textBox.TextTransparency = 1
-textBox.PlaceholderText = "Enter key"
-textBox.Text = ""
-textBox.TextScaled = true
-textBox.BackgroundColor3 = Color3.new(70/255, 70/255, 70/255)
-textBox.TextColor3 = Color3.new(1, 1, 1) -- Белый цвет текста
-textBox.Visible = false
-
-errorLabel.Size = UDim2.new(0, 155, 0, 43)
-errorLabel.Position = UDim2.new(0.053, 0, 0.747, 0)
-errorLabel.BackgroundTransparency = 1
-errorLabel.TextTransparency = 1
-errorLabel.Text = "Incorrect key. Try again."
-errorLabel.TextColor3 = Color3.new(1, 0, 0) -- Красный цвет текста ошибки
-errorLabel.TextScaled = true
-errorLabel.Visible = false
-
-local uiCorner = Instance.new("UICorner", textBox)
-uiCorner.CornerRadius = UDim.new(0, 10) -- Закругление углов
-
--- Создаем tween для открытия
-local openTweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-local openTweenGoals = {Size = UDim2.new(0, 170, 0, 198)}
-
-local openTween = TweenService:Create(frame, openTweenInfo, openTweenGoals)
-
--- Создаем tween для появления текста и иконки
-local appearTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-local appearTextGoals = {TextTransparency = 0}
-local appearImageGoals = {ImageTransparency = 0}
-local appearBoxGoals = {TextTransparency = 0, BackgroundTransparency = 0}
-
-local textAppearTween = TweenService:Create(textLabel, appearTweenInfo, appearTextGoals)
-local imageAppearTween = TweenService:Create(imageLabel, appearTweenInfo, appearImageGoals)
-local boxAppearTween = TweenService:Create(textBox, appearTweenInfo, appearBoxGoals)
-
--- Создаем tween для исчезновения текста и иконки
-local disappearTweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-local disappearTextGoals = {TextTransparency = 1}
-local disappearImageGoals = {ImageTransparency = 1}
-
-local textDisappearTween = TweenService:Create(textLabel, disappearTweenInfo, disappearTextGoals)
-local imageDisappearTween = TweenService:Create(imageLabel, disappearTweenInfo, disappearImageGoals)
-
--- Создаем tween для исчезновения текст бокса и ошибки
-local boxDisappearTweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-local boxDisappearGoals = {TextTransparency = 1, BackgroundTransparency = 1}
-local errorDisappearTweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-local errorDisappearGoals = {TextTransparency = 1}
-
-local boxDisappearTween = TweenService:Create(textBox, boxDisappearTweenInfo, boxDisappearGoals)
-local errorDisappearTween = TweenService:Create(errorLabel, errorDisappearTweenInfo, errorDisappearGoals)
-
--- Создаем tween для закрытия
-local closeTweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-local closeTweenGoals = {Size = UDim2.new(0, 0, 0, 0)}
-
-local closeTween = TweenService:Create(frame, closeTweenInfo, closeTweenGoals)
-
--- Функция для открытия GUI
-local function openGUI()
-    keyScreenGui.Enabled = true
-    openTween:Play()
-    openTween.Completed:Connect(function()
-        textAppearTween:Play()
-        imageAppearTween:Play()
-        wait(2) -- Время до исчезновения текста и иконки (2 секунды)
-        textDisappearTween:Play()
-        imageDisappearTween:Play()
-        textDisappearTween.Completed:Connect(function()
-            textBox.Visible = true
-            imageLabel.ImageTransparency = 0
-            boxAppearTween:Play()
+                if moveDirection.Magnitude > 0 then
+                    humanoidRootPart.CFrame = humanoidRootPart.CFrame + (moveDirection.Unit * speed / 50)
+                end
+            end
         end)
-    end)
+    end
 end
 
--- Функция для закрытия GUI
-local function closeGUI()
-    imageDisappearTween:Play()
-    imageDisappearTween.Completed:Connect(function()
-        boxDisappearTween:Play()
-        errorDisappearTween:Play()
-        boxDisappearTween.Completed:Connect(function()
-            closeTween:Play()
-            closeTween.Completed:Connect(function()
-                keyScreenGui.Enabled = false
-            end)
-        end)
-    end)
+-- Добавляем ползунок на вкладку
+Tab:AddSlider({
+    Name = "CFrame Speed",
+    Min = 0,
+    Max = 100,
+    Default = 16,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "Speed",
+    Callback = function(Value)
+        speed = Value
+    end    
+})
+
+-- Запускаем функцию перемещения
+moveCharacter()
+
+Tab:AddSlider({
+    Name = "Jump Power",
+    Min = 0,
+    Max = 200,
+    Default = 50,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "Power",
+    Callback = function(Value)
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
+    end    
+})
+
+Tab:AddSlider({
+    Name = "Field of View",
+    Min = 90,
+    Max = 120,
+    Default = 90,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "FOV",
+    Callback = function(Value)
+        game.Workspace.CurrentCamera.FieldOfView = Value
+    end    
+})
+
+DH:AddLabel("Enable CamLock [Q]")
+
+
+local camLockEnabled = false
+local targetPlayer = nil
+local whitelist = {}
+local attackMethod = "Normal"
+local lastKilledPlayerPosition = nil
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local TweenService = game:GetService("TweenService")
+
+local currentUIStyle = "Rounded" -- "Square" or "Rounded"
+local currentBackgroundColor = Color3.fromRGB(0, 0, 0) -- Black background
+
+-- Create GUI with options for square and rounded styles
+local function createGui()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "CamLockGui"
+    screenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+
+    local frame = Instance.new("Frame")
+    frame.Name = "PlayerInfoFrame"
+    frame.Size = UDim2.new(0, 250, 0, 100)
+    frame.Position = UDim2.new(0.5, -125, 0.5, -50) -- Start in the center
+    frame.BackgroundColor3 = currentBackgroundColor
+    frame.BorderSizePixel = 0
+    frame.AnchorPoint = Vector2.new(0.5, 0.5)
+    frame.Parent = screenGui
+
+    if currentUIStyle == "Rounded" then
+        local uiCorner = Instance.new("UICorner")
+        uiCorner.CornerRadius = UDim.new(0, 10)
+        uiCorner.Parent = frame
+    end
+
+    local playerNameLabel = Instance.new("TextLabel")
+    playerNameLabel.Name = "PlayerNameLabel"
+    playerNameLabel.Size = UDim2.new(1, 0, 0, 40)
+    playerNameLabel.Position = UDim2.new(0, 0, 0, 10)
+    playerNameLabel.BackgroundTransparency = 1
+    playerNameLabel.TextColor3 = Color3.new(1, 1, 1)
+    playerNameLabel.TextScaled = true
+    playerNameLabel.Parent = frame
+
+    local hpBarBackground = Instance.new("Frame")
+    hpBarBackground.Name = "HPBarBackground"
+    hpBarBackground.Size = UDim2.new(0.8, 0, 0, 20)
+    hpBarBackground.Position = UDim2.new(0.1, 0, 0, 60)
+    hpBarBackground.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+    hpBarBackground.BorderSizePixel = 0
+    hpBarBackground.Parent = frame
+
+    local hpBar = Instance.new("Frame")
+    hpBar.Name = "HPBar"
+    hpBar.Size = UDim2.new(1, 0, 1, 0)
+    hpBar.BackgroundColor3 = Color3.new(0, 1, 0)
+    hpBar.BorderSizePixel = 0
+    hpBar.Parent = hpBarBackground
+
+    if currentUIStyle == "Rounded" then
+        local uiCorner2 = Instance.new("UICorner")
+        uiCorner2.CornerRadius = UDim.new(0, 10)
+        uiCorner2.Parent = hpBarBackground
+        local uiCorner3 = Instance.new("UICorner")
+        uiCorner3.CornerRadius = UDim.new(0, 10)
+        uiCorner3.Parent = hpBar
+    end
+
+    frame.Visible = false
+
+    return screenGui, frame, playerNameLabel, hpBar
 end
 
--- Список проверенных пользователей
-local verifiedUsers = {
-    ["danlachoo"] = true,
-    ["Lazy_cat483"] = true
-}
+local screenGui, frame, playerNameLabel, hpBar = createGui()
 
--- Функция для проверки ключа
-local function checkKey()
-    print("Checking key for user:", player.Name)
-    if verifiedUsers[player.Name] then
-        print("User is verified.")
-        closeGUI()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/danlachoo/RezCokk/main/HsdhjDHSAJSDHdsjAHDJadhlksh12303DSgahjkdashjKSD.lua", true))()
-    elseif textBox.Text == "danlacho" then
-        print("Key is correct.")
-        closeGUI()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/danlachoo/RezCokk/main/HsdhjDHSAJSDHdsjAHDJadhlksh12303DSgahjkdashjKSD.lua", true))()
+local function updateGui()
+    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
+        local humanoid = targetPlayer.Character.Humanoid
+        playerNameLabel.Text = targetPlayer.Name
+        local hpPercentage = humanoid.Health / humanoid.MaxHealth
+        hpBar.Size = UDim2.new(hpPercentage, 0, 1, 0)
+        hpBar.BackgroundColor3 = Color3.new(1 - hpPercentage, hpPercentage, 0)
+        frame.Visible = true
     else
-        print("Key is incorrect.")
-        errorLabel.Visible = true
-        errorDisappearTween:Play()
-        wait(1) -- Показать сообщение об ошибке в течение 1 секунды
-        errorLabel.TextTransparency = 1 -- Скрыть сообщение об ошибке после его показа
-        createNotification("Error", "Incorrect key. Try again.") -- Уведомление об ошибке
+        frame.Visible = false
     end
 end
 
--- Обработчик для проверки ключа при вводе
-textBox.FocusLost:Connect(function(enterPressed)
-    if enterPressed then
-        checkKey()
-    end
-end)
+local function showGui()
+    -- First, move to center
+    frame.Position = UDim2.new(0.5, -125, 0.5, -50) 
+    frame.Visible = true
 
--- Функция для перетаскивания с плавным перемещением
-local dragging, dragStart, startPos
-
-local function onDragStart(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = frame.Position
-    end
+    -- Animate from center to target position
+    local targetPosition = UDim2.new(0.5, -125, 1, -120)
+    local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(frame, tweenInfo, {Position = targetPosition})
+    tween:Play()
 end
 
-local function onDrag(input)
-    if dragging then
-        local delta = input.Position - dragStart
-        local newPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        
-        -- Плавное перемещение с использованием TweenService
-        local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-        local tweenGoals = {Position = newPos}
-        local tween = TweenService:Create(frame, tweenInfo, tweenGoals)
-        tween:Play()
-    end
-end
-
-frame.InputBegan:Connect(onDragStart)
-frame.InputChanged:Connect(onDrag)
-
--- Функция для анимации текста в TextBox
-local function animateText()
-    local textTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    local enlargeGoals = {TextSize = textBox.TextSize + 2}
-    local shrinkGoals = {TextSize = textBox.TextSize}
-
-    local enlargeTween = TweenService:Create(textBox, textTweenInfo, enlargeGoals)
-    local shrinkTween = TweenService:Create(textBox, textTweenInfo, shrinkGoals)
-
-    enlargeTween:Play()
-    enlargeTween.Completed:Connect(function()
-        shrinkTween:Play()
+local function hideGui()
+    local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Bounce, Enum.EasingDirection.In)
+    local tween = TweenService:Create(frame, tweenInfo, {Position = UDim2.new(0.5, -125, 0.5, -50)})
+    tween:Play()
+    tween.Completed:Connect(function()
+        frame.Visible = false
     end)
 end
 
--- Обработчик для анимации текста при вводе
-textBox:GetPropertyChangedSignal("Text"):Connect(function()
-    animateText()
+local function getClosestPlayer()
+    local Player = Players.LocalPlayer
+    local Camera = Workspace.CurrentCamera
+    local closestDistance = math.huge
+    local closestPlayer = nil
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= Player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            if not table.find(whitelist, player.Name) then
+                local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    local distance = (Camera.CFrame.Position - player.Character.HumanoidRootPart.Position).magnitude
+                    if distance < _G.camLockDistance and humanoid.Health > 10 and distance < closestDistance then
+                        closestDistance = distance
+                        closestPlayer = player
+                    end
+                end
+            end
+        end
+    end
+
+    return closestPlayer
+end
+
+local function onPlayerRemoved(player)
+    if targetPlayer == player then
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            lastKilledPlayerPosition = player.Character.HumanoidRootPart.Position
+        end
+        targetPlayer = nil
+        camLockEnabled = false
+        hideGui()
+    end
+end
+
+local function updateCamLock()
+    while camLockEnabled do
+        wait()
+        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local targetPosition
+            if _G.camLockTarget == "Head" and targetPlayer.Character:FindFirstChild("Head") then
+                targetPosition = targetPlayer.Character.Head.Position
+            else
+                targetPosition = targetPlayer.Character.HumanoidRootPart.Position
+            end
+
+            local playerRootPart = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if playerRootPart then
+                if attackMethod == "Normal" then
+                    playerRootPart.CFrame = CFrame.new(playerRootPart.Position, targetPosition)
+                elseif attackMethod == "Above Head" then
+                    local radius = 5
+                    local height = 10
+                    local angle = tick() * 2
+                    local offset = Vector3.new(math.cos(angle) * radius, height, math.sin(angle) * radius)
+                    local newPosition = targetPosition + offset
+
+                    local distance = (playerRootPart.Position - newPosition).magnitude
+                    if distance > radius then
+                        playerRootPart.CFrame = CFrame.new(newPosition, targetPosition)
+                    end
+                elseif attackMethod == "Circle Around" then
+                    local radius = 10
+                    local speed = 200
+                    local angle = tick() * speed
+                    local offset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
+                    playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
+                elseif attackMethod == "Air" then
+                    local radius = 7
+                    local speed = 400
+                    local angle = tick() * speed
+                    local offset = Vector3.new(math.cos(angle) * radius, 5, math.sin(angle) * radius)
+                    playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
+                elseif attackMethod == "Underneath" then
+                    local offset = Vector3.new(0, -3, 0)
+                    playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
+                elseif attackMethod == "Rotate Underneath" then
+                    local radius = 5
+                    local speed = 100
+                    local angle = tick() * speed
+                    local offset = Vector3.new(math.cos(angle) * radius, -3, math.sin(angle) * radius)
+                    playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
+                elseif attackMethod == "AdvancedEvasion" then
+                    local radius = 10
+                    local speed = 300
+                    local angle = tick() * speed
+                    local offset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
+                    local newPosition = targetPosition + offset
+
+                    local distance = (playerRootPart.Position - newPosition).magnitude
+                    if distance > radius then
+                        playerRootPart.CFrame = CFrame.new(newPosition, targetPosition)
+                    end
+                    
+                    -- High-speed zigzag movement
+                    local zigzagSpeed = 5
+                    local zigzagAngle = tick() * zigzagSpeed
+                    local zigzagOffset = Vector3.new(math.sin(zigzagAngle) * 5, 0, 0)
+                    playerRootPart.CFrame = CFrame.new(playerRootPart.Position + zigzagOffset, targetPosition)
+                elseif attackMethod == "HVH" then
+					local radius = 15
+    				local speed = 600
+    				local angle = tick() * speed
+    				local offset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
+    				local newPosition = targetPosition + offset
+				
+    				-- Update player position with high-speed movement
+    				playerRootPart.CFrame = CFrame.new(newPosition, targetPosition)
+				
+    				-- Additional aggressive zigzag movement
+    				local zigzagSpeed = 10
+    				local zigzagAngle = tick() * zigzagSpeed
+    				local zigzagOffset = Vector3.new(math.sin(zigzagAngle) * 10, 0, 0)
+    				playerRootPart.CFrame = CFrame.new(playerRootPart.Position + zigzagOffset, targetPosition)
+				
+    				-- High-speed rotation to match target's position
+    				local rotationSpeed = 5
+    				local rotationAngle = tick() * rotationSpeed
+    				local rotationOffset = CFrame.Angles(0, rotationAngle, 0)
+    				playerRootPart.CFrame = playerRootPart.CFrame * rotationOffset
+				
+    				-- Adjust camera to follow the aggressive movement
+    				local cameraPosition = Workspace.CurrentCamera.CFrame.Position
+    				local direction = (targetPosition - cameraPosition).unit
+    				Workspace.CurrentCamera.CFrame = CFrame.new(cameraPosition, targetPosition)
+                end
+            end
+
+            local cameraPosition = Workspace.CurrentCamera.CFrame.Position
+            local direction = (targetPosition - cameraPosition).unit
+            Workspace.CurrentCamera.CFrame = CFrame.new(cameraPosition, targetPosition)
+            
+            updateGui()
+
+            if targetPlayer.Character.Humanoid.Health <= 0 then
+                camLockEnabled = false
+                hideGui()
+            end
+        else
+            targetPlayer = getClosestPlayer()
+            updateGui()
+        end
+    end
+end
+
+-- Connect to player removal event
+Players.PlayerRemoving:Connect(onPlayerRemoved)
+
+-- Bind to toggle cam lock
+local function toggleCamLock()
+    camLockEnabled = not camLockEnabled
+    if camLockEnabled then
+        targetPlayer = getClosestPlayer()
+        if targetPlayer then
+            showGui()
+            spawn(updateCamLock)
+        end
+    else
+        Workspace.CurrentCamera.CameraSubject = Players.LocalPlayer.Character.Humanoid
+        hideGui()
+    end
+end
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if input.KeyCode == Enum.KeyCode.Q and not gameProcessed then
+        toggleCamLock()
+    end
 end)
 
--- Показ GUI для ввода ключа для всех игроков
-openGUI()
 
--- Автоматическое копирование ссылки и показ уведомления
-setclipboard("https://discord.gg/ub8uhv6cYz")
-createNotification("RezCokk", "Discord link copied automatically!")
+
+
+DH:AddSlider({
+    Name = "Distance",
+    Min = 0,
+    Max = 50,
+    Default = 5,
+    Color = Color3.fromRGB(255, 255, 255),
+    Increment = 1,
+    ValueName = "units",
+    Callback = function(Value)
+        _G.camLockDistance = Value
+    end
+})
+
+DH:AddDropdown({
+    Name = "Target Body Part",
+    Default = "Head",
+    Options = {"Head", "Torso", "HumanoidRootPart"},
+    Callback = function(Value)
+        _G.camLockTarget = Value
+    end    
+})
+
+DH:AddDropdown({
+    Name = "Attack Method",
+    Default = "Normal",
+    Options = {"Normal", "Above Head", "Circle Around", "Air", "Underneath", "Rotate Underneath", "AdvancedEvasion", "HVH"},
+    Callback = function(Value)
+        attackMethod = Value
+    end    
+})
+
+
+
+
+local Section = DH:AddSection({
+	Name = "Other"
+})
+
+
+
+DH:AddButton({
+	Name = "Animations Gamepass",
+	Callback = function()
+      		--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+     -- // clone
+            for _, v in next, game:GetService("CoreGui"):GetChildren() do
+                if (v.Name:match("FreeAnimationPack")) then
+                    v:Destroy()
+                end
+            end
+        
+            -- // Instances
+            local FreeAnimationPack = Instance.new("ScreenGui")
+            local AnimationPack = Instance.new("TextButton")
+            local Animations = Instance.new("ScrollingFrame")
+            local UIListLayout = Instance.new("UIListLayout")
+            local Lean = Instance.new("TextButton")
+            local Lay = Instance.new("TextButton")
+            local Dance1 = Instance.new("TextButton")
+            local Dance2 = Instance.new("TextButton")
+            local Greet = Instance.new("TextButton")
+            local ChestPump = Instance.new("TextButton")
+            local Praying = Instance.new("TextButton")
+            local Stop = Instance.new("TextButton")
+            local UniversalAnimation = Instance.new("Animation")
+        
+            -- // Utility
+            function stopTracks()
+                for _, v in next, game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):GetPlayingAnimationTracks() do
+                    if (v.Animation.AnimationId:match("rbxassetid")) then
+                        v:Stop()
+                    end
+                end
+            end
+        
+            function loadAnimation(id)
+                if UniversalAnimation.AnimationId == id then
+                    stopTracks()
+                    UniversalAnimation.AnimationId = "1"
+                else
+                    UniversalAnimation.AnimationId = id
+                    local animationTrack = game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):LoadAnimation(UniversalAnimation)
+                    animationTrack:Play()
+                end
+            end
+        
+
+            FreeAnimationPack.Name = "FreeAnimationPack"
+            FreeAnimationPack.Parent = game.CoreGui
+            FreeAnimationPack.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        
+            AnimationPack.Name = "AnimationPack"
+            AnimationPack.Parent = FreeAnimationPack
+            AnimationPack.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            AnimationPack.BorderSizePixel = 0
+            AnimationPack.Position = UDim2.new(0, 0, 0.388007045, 0)
+            AnimationPack.Size = UDim2.new(0, 100, 0, 20)
+            AnimationPack.Font = Enum.Font.SourceSansBold
+            AnimationPack.Text = "Animations"
+            AnimationPack.TextColor3 = Color3.fromRGB(0, 0, 0)
+            AnimationPack.TextSize = 18.000
+            AnimationPack.MouseButton1Click:Connect(function()
+                if (Animations.Visible == false) then
+                    Animations.Visible = true
+                end
+            end)
+        
+            Animations.Name = "Animations"
+            Animations.Parent = AnimationPack
+            Animations.Active = true
+            Animations.BackgroundColor3 = Color3.fromRGB(102, 102, 102)
+            Animations.Position = UDim2.new(-0.104712225, 0, -1.54173493, 0)
+            Animations.Size = UDim2.new(0, 120, 0, 195)
+            Animations.Visible = false
+            Animations.CanvasPosition = Vector2.new(0, 60.0000305)
+            Animations.CanvasSize = UDim2.new(0, 0, 1, 235)
+        
+            UIListLayout.Parent = Animations
+            UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            UIListLayout.Padding = UDim.new(0, 2)
+        
+            Lean.Name = "Lean"
+            Lean.Parent = Animations
+            Lean.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            Lean.Size = UDim2.new(1, 0, 0, 30)
+            Lean.Font = Enum.Font.SourceSansBold
+            Lean.Text = "Lean"
+            Lean.TextColor3 = Color3.fromRGB(0, 0, 0)
+            Lean.TextSize = 14.000
+            Lean.MouseButton1Click:Connect(function()
+                stopTracks()
+                loadAnimation("rbxassetid://3152375249")
+            end)
+        
+            Lay.Name = "Lay"
+            Lay.Parent = Animations
+            Lay.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            Lay.Size = UDim2.new(1, 0, 0, 30)
+            Lay.Font = Enum.Font.SourceSansBold
+            Lay.Text = "Lay"
+            Lay.TextColor3 = Color3.fromRGB(0, 0, 0)
+            Lay.TextSize = 14.000
+            Lay.MouseButton1Click:Connect(function()
+                stopTracks()
+                loadAnimation("rbxassetid://3152378852")
+            end)
+        
+            Dance1.Name = "Dance1"
+            Dance1.Parent = Animations
+            Dance1.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            Dance1.Size = UDim2.new(1, 0, 0, 30)
+            Dance1.Font = Enum.Font.SourceSansBold
+            Dance1.Text = "Dance1"
+            Dance1.TextColor3 = Color3.fromRGB(0, 0, 0)
+            Dance1.TextSize = 14.000
+            Dance1.MouseButton1Click:Connect(function()
+                stopTracks()
+                loadAnimation("rbxassetid://3189773368")
+            end)
+        
+            Dance2.Name = "Dance2"
+            Dance2.Parent = Animations
+            Dance2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            Dance2.Size = UDim2.new(1, 0, 0, 30)
+            Dance2.Font = Enum.Font.SourceSansBold
+            Dance2.Text = "Dance2"
+            Dance2.TextColor3 = Color3.fromRGB(0, 0, 0)
+            Dance2.TextSize = 14.000
+            Dance2.MouseButton1Click:Connect(function()
+                stopTracks()
+                loadAnimation("rbxassetid://3189776546")
+            end)
+        
+            Greet.Name = "Greet"
+            Greet.Parent = Animations
+            Greet.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            Greet.Size = UDim2.new(1, 0, 0, 30)
+            Greet.Font = Enum.Font.SourceSansBold
+            Greet.Text = "Greet"
+            Greet.TextColor3 = Color3.fromRGB(0, 0, 0)
+            Greet.TextSize = 14.000
+            Greet.MouseButton1Click:Connect(function()
+                stopTracks()
+                loadAnimation("rbxassetid://3189777795")
+            end)
+        
+            ChestPump.Name = "ChestPump"
+            ChestPump.Parent = Animations
+            ChestPump.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            ChestPump.Size = UDim2.new(1, 0, 0, 30)
+            ChestPump.Font = Enum.Font.SourceSansBold
+            ChestPump.Text = "Chest Pump"
+            ChestPump.TextColor3 = Color3.fromRGB(0, 0, 0)
+            ChestPump.TextSize = 14.000
+            ChestPump.MouseButton1Click:Connect(function()
+                stopTracks()
+                loadAnimation("rbxassetid://3189779152")
+            end)
+        
+            Praying.Name = "Praying"
+            Praying.Parent = Animations
+            Praying.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            Praying.Size = UDim2.new(1, 0, 0, 30)
+            Praying.Font = Enum.Font.SourceSansBold
+            Praying.Text = "Praying"
+            Praying.TextColor3 = Color3.fromRGB(0, 0, 0)
+            Praying.TextSize = 14.000
+            Praying.MouseButton1Click:Connect(function()
+                stopTracks()
+                loadAnimation("rbxassetid://3487719500")
+            end)
+        
+            Stop.Name = "Stop"
+            Stop.Parent = Animations
+            Stop.BackgroundColor3 = Color3.fromRGB(255, 112, 112)
+            Stop.Size = UDim2.new(1, 0, 0, 30)
+            Stop.Font = Enum.Font.SourceSansBold
+            Stop.Text = "Stop Animation"
+            Stop.TextColor3 = Color3.fromRGB(0, 0, 0)
+            Stop.TextSize = 14.000
+            Stop.MouseButton1Click:Connect(function()
+                stopTracks()
+            end)
+            --close gui
+            local plr = game.Players.LocalPlayer
+        
+            plr:GetMouse().KeyDown:Connect(function(K)
+                if K == "p" then
+                    Animations.Visible = false
+                end
+            end)
+        warn("loaded")
+  	end    
+})
+
+DH:AddButton({
+	Name = "Fly [X]",
+	Callback = function()
+      		loadstring(game:HttpGet("https://pastebin.com/raw/sUA9m6M6"))()
+  	end    
+})
+
+DH:AddButton({
+	Name = "No recoil",
+	Callback = function()
+      		local player = game.Players.LocalPlayer
+		for i,v in pairs(game:GetService('Workspace'):GetChildren()) do
+			if v:IsA('Camera') then
+				v:Destroy()
+			end
+		end
+		local newcam = Instance.new('Camera')
+		newcam.Parent = game:GetService('Workspace')
+		newcam.Name = 'Camera'
+		newcam.CameraType = 'Custom'
+		newcam.CameraSubject = player.Character:FindFirstChildWhichIsA('Humanoid')
+		newcam.HeadLocked = true
+		newcam.HeadScale = 1 
+        newcam.Workspace.CurrentCamera.FieldOfView = 120
+  	end    
+})
+
+
+
+
+local Section = DH:AddSection({
+	Name = "CamLock WhiteList"
+})
+
+DH:AddTextbox({
+    Name = "Add to Whitelist",
+    Default = "",
+    TextDisappear = true,
+    Callback = function(Value)
+        table.insert(whitelist, Value)
+        print("Added to whitelist: " .. Value)
+    end
+})
+
+DH:AddTextbox({
+    Name = "Remove from Whitelist",
+    Default = "",
+    TextDisappear = true,
+    Callback = function(Value)
+        local index = table.find(whitelist, Value)
+        if index then
+            table.remove(whitelist, index)
+            print("Removed from whitelist: " .. Value)
+        end
+    end
+})
+
+-- ESP ------------------------------------
+
+local Section = VS:AddSection({
+	Name = "Esp"
+})
+
+-- Создаем переменную для хранения выбранного цвета
+local selectedColor = Color3.fromRGB(255, 0, 0)
+
+-- Функция для обновления Highlight всех игроков
+local function updateHighlights()
+    for _, player in pairs(game.Players:GetPlayers()) do
+        local character = player.Character
+        if character then
+            local highlight = character:FindFirstChild("ToggleHighlight")
+            if highlight then
+                highlight.FillColor = selectedColor -- Устанавливаем цвет обводки
+            end
+        end
+    end
+end
+
+-- Переключатель для включения/выключения Highlight
+VS:AddToggle({
+    Name = "Enable Esp",
+    Default = false,
+    Callback = function(Value)
+        for _, player in pairs(game.Players:GetPlayers()) do
+            local character = player.Character or player.CharacterAdded:Wait()
+            
+            if Value then
+                -- Создаем Highlight и присоединяем его к персонажу
+                local highlight = Instance.new("Highlight")
+                highlight.Name = "ToggleHighlight" -- Даем уникальное имя для легкого нахождения
+                highlight.Parent = character
+                highlight.FillColor = selectedColor -- Устанавливаем цвет обводки
+                highlight.Adornee = character
+            else
+                -- Находим и удаляем Highlight, если он существует
+                local existingHighlight = character:FindFirstChild("ToggleHighlight")
+                if existingHighlight then
+                    existingHighlight:Destroy()
+                end
+            end
+        end
+        
+        -- Обновляем Highlight для всех игроков
+        updateHighlights()
+        
+        print(Value)
+    end
+})
+
+-- Выбор цвета с ColorPicker
+VS:AddColorpicker({
+    Name = "Esp Color",
+    Default = Color3.fromRGB(255, 0, 0),
+    Callback = function(Value)
+        selectedColor = Value
+        updateHighlights() -- Обновляем цвета Highlight для всех игроков
+        print(Value)
+    end
+})
+
+local Section = VS:AddSection({
+	Name = "Texts"
+})
+
+
+-- Получаем нужные сервисы
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+
+-- Определяем игрока и необходимые переменные
+local localPlayer = Players.LocalPlayer
+local isSpectating = false
+local spectatingPlayer = nil
+local originalPosition = nil
+
+-- Функция для сохранения текущего положения
+local function saveOriginalPosition()
+    if localPlayer.Character and localPlayer.Character.PrimaryPart then
+        originalPosition = localPlayer.Character.PrimaryPart.CFrame
+    else
+        print("PrimaryPart not found in character.")
+    end
+end
+
+-- Функция для телепортации к игроку
+local function teleportToPlayer(targetPlayer)
+    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        -- Сохраняем текущее положение перед телепортацией
+        saveOriginalPosition()
+        -- Телепортируем к целевому игроку
+        localPlayer.Character:SetPrimaryPartCFrame(targetPlayer.Character.HumanoidRootPart.CFrame)
+        print("Teleported to", targetPlayer.Name)
+    else
+        print("Target player or their character is not available.")
+    end
+end
+
+-- Функция для наблюдения за игроком
+local function startSpectating(targetPlayer)
+    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        -- Переключаем камеру на целевого игрока
+        Workspace.CurrentCamera.CameraSubject = targetPlayer.Character:FindFirstChildOfClass("Humanoid")
+        isSpectating = true
+        spectatingPlayer = targetPlayer
+        print("Started spectating", targetPlayer.Name)
+    else
+        print("Target player or their character is not available.")
+    end
+end
+
+-- Функция для прекращения наблюдения
+local function stopSpectating()
+    if isSpectating then
+        -- Возвращаем камеру к игроку
+        Workspace.CurrentCamera.CameraSubject = localPlayer.Character and localPlayer.Character:FindFirstChildOfClass("Humanoid")
+        isSpectating = false
+        spectatingPlayer = nil
+        print("Stopped spectating.")
+    else
+        print("Not currently spectating.")
+    end
+end
+
+-- Функция для телепортации перед игроком и возврата
+local function spookPlayer(targetPlayer)
+    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        -- Сохраняем текущее положение перед телепортацией
+        saveOriginalPosition()
+        -- Телепортируем перед целевым игроком
+        local humanoidRootPart = targetPlayer.Character.HumanoidRootPart
+        local direction = (humanoidRootPart.Position - localPlayer.Character.PrimaryPart.Position).unit
+        local newPosition = humanoidRootPart.Position - direction * 5 -- Позиция перед игроком, на 5 studs от него
+
+        -- Перемещаем игрока перед целевым игроком
+        localPlayer.Character:SetPrimaryPartCFrame(CFrame.new(newPosition, humanoidRootPart.Position))
+        wait(1) -- Ожидаем 1 секунду
+
+        -- Возвращаем игрока на исходное место
+        if originalPosition then
+            localPlayer.Character:SetPrimaryPartCFrame(originalPosition)
+            print("Spooked", targetPlayer.Name, "and returned to original position.")
+        else
+            print("No original position to return to.")
+        end
+    else
+        print("Target player or their character is not available.")
+    end
+end
+
+-- Обработчик сообщений чата
+local function onPlayerChatted(message)
+    local args = message:split(" ")
+    if args[1] == ".tpa" and #args == 2 then
+        local targetPlayerName = args[2]
+        local targetPlayer = Players:FindFirstChild(targetPlayerName)
+        if targetPlayer then
+            teleportToPlayer(targetPlayer)
+        else
+            print("Player not found.")
+        end
+    elseif args[1] == ".spec" and #args == 2 then
+        local targetPlayerName = args[2]
+        local targetPlayer = Players:FindFirstChild(targetPlayerName)
+        if targetPlayer then
+            startSpectating(targetPlayer)
+        else
+            print("Player not found.")
+        end
+    elseif args[1] == ".unspec" then
+        stopSpectating()
+    elseif args[1] == ".spook" and #args == 2 then
+        local targetPlayerName = args[2]
+        local targetPlayer = Players:FindFirstChild(targetPlayerName)
+        if targetPlayer then
+            spookPlayer(targetPlayer)
+        else
+            print("Player not found.")
+        end
+    end
+end
+
+-- Подключаем обфработчик сообщений чата
+localPlayer.Chatted:Connect(onPlayerChatted)
+
+
