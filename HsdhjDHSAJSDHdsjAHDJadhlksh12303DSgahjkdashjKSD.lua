@@ -26,14 +26,21 @@ local DH = Window:MakeTab({
     PremiumOnly = false
 })
 
-local LT2 = Window:MakeTab({
-    Name = "Lumber Tycoon 2",
+local Targets = Window:MakeTab({
+	Name = "Targets",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+
+local MiscTab = Window:MakeTab({
+    Name = "Misc",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
-local MiscTab = Window:MakeTab({
-    Name = "Misc",
+local cfg = Window:MakeTab({
+    Name = "Config",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
@@ -98,106 +105,6 @@ local function createNotification(title, message)
     end)
 end
 
-
--- Adding features to the LT2 tab
-LT2:AddButton({
-    Name = "Wood R us",
-    Callback = function()
-        local player = game.Players.LocalPlayer
-        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            player.Character.HumanoidRootPart.CFrame = CFrame.new(259.498, 3.16998, 57.6584)
-            createNotification("Teleport", "Teleported to Wood R Us")
-        end
-    end
-})
-
-LT2:AddButton({
-    Name = "Land Store",
-    Callback = function()
-        local player = game.Players.LocalPlayer
-        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            player.Character.HumanoidRootPart.CFrame = CFrame.new(273.155, 3.08099, -97.9038)
-            createNotification("Teleport", "Teleported to Land Store")
-        end
-    end
-})
-
-LT2:AddButton({
-    Name = "Car shop",
-    Callback = function()
-        local player = game.Players.LocalPlayer
-        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            player.Character.HumanoidRootPart.CFrame = CFrame.new(509.9, 3.13624, -1452.15)
-            createNotification("Teleport", "Teleported to Car Shop")
-        end
-    end
-})
-
-LT2:AddButton({
-    Name = "Furniture Shop",
-    Callback = function()
-        local player = game.Players.LocalPlayer
-        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            player.Character.HumanoidRootPart.CFrame = CFrame.new(498.77, 3.05071, -1729.68)
-            createNotification("Teleport", "Teleported to Furniture Shop")
-        end
-    end
-})
-
-LT2:AddButton({
-    Name = "FineArt Shop",
-    Callback = function()
-        local player = game.Players.LocalPlayer
-        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            player.Character.HumanoidRootPart.CFrame = CFrame.new(5226.62, -166.177, 718.345)
-            createNotification("Teleport", "Teleported to FineArt Shop")
-        end
-    end
-})
-
-LT2:AddButton({
-    Name = "ShackShop",
-    Callback = function()
-        local player = game.Players.LocalPlayer
-        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            player.Character.HumanoidRootPart.CFrame = CFrame.new(264.61, 8.25245, -2541.67)
-            createNotification("Teleport", "Teleported to Shack Shop")
-        end
-    end
-})
-
-LT2:AddButton({
-    Name = "Swamp Location",
-    Callback = function()
-        local player = game.Players.LocalPlayer
-        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            player.Character.HumanoidRootPart.CFrame = CFrame.new(-1090.67, 131.533, -1108.28)
-            createNotification("Teleport", "Teleported to Swamp")
-        end
-    end
-})
-
-LT2:AddButton({
-    Name = "Volcano Location",
-    Callback = function()
-        local player = game.Players.LocalPlayer
-        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            player.Character.HumanoidRootPart.CFrame = CFrame.new(-1661.97, 623, 1066.59)
-            createNotification("Teleport", "Teleported to Volcano")
-        end
-    end
-})
-
-LT2:AddButton({
-    Name = "Palm Location",
-    Callback = function()
-        local player = game.Players.LocalPlayer
-        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            player.Character.HumanoidRootPart.CFrame = CFrame.new(1938.3, -5.91243, -1537.41)
-            createNotification("Teleport", "Teleported to Palm")
-        end
-    end
-})
 
 local speed = 16  -- Начальная скорость
 
@@ -276,6 +183,9 @@ Tab:AddSlider({
     end    
 })
 
+DH:AddLabel("Enable CamLock [Q]")
+
+
 local camLockEnabled = false
 local targetPlayer = nil
 local whitelist = {}
@@ -286,6 +196,91 @@ local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local TweenService = game:GetService("TweenService")
 
+local function createGui()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "CamLockGui"
+    screenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+
+    local frame = Instance.new("Frame")
+    frame.Name = "PlayerInfoFrame"
+    frame.Size = UDim2.new(0, 250, 0, 100)
+    frame.Position = UDim2.new(0.5, -125, 1, -120)  -- Positioned at bottom center, slightly above the bottom edge
+    frame.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+    frame.BorderSizePixel = 0
+    frame.AnchorPoint = Vector2.new(0.5, 1)  -- Anchor at the bottom center
+    frame.Parent = screenGui
+
+    local uiCorner = Instance.new("UICorner")
+    uiCorner.CornerRadius = UDim.new(0, 10)
+    uiCorner.Parent = frame
+
+    local playerNameLabel = Instance.new("TextLabel")
+    playerNameLabel.Name = "PlayerNameLabel"
+    playerNameLabel.Size = UDim2.new(1, 0, 0, 40)
+    playerNameLabel.Position = UDim2.new(0, 0, 0, 10)
+    playerNameLabel.BackgroundTransparency = 1
+    playerNameLabel.TextColor3 = Color3.new(1, 1, 1)
+    playerNameLabel.TextScaled = true
+    playerNameLabel.Parent = frame
+
+    local hpBarBackground = Instance.new("Frame")
+    hpBarBackground.Name = "HPBarBackground"
+    hpBarBackground.Size = UDim2.new(0.8, 0, 0, 20)
+    hpBarBackground.Position = UDim2.new(0.1, 0, 0, 60)
+    hpBarBackground.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+    hpBarBackground.BorderSizePixel = 0
+    hpBarBackground.Parent = frame
+
+    local hpBar = Instance.new("Frame")
+    hpBar.Name = "HPBar"
+    hpBar.Size = UDim2.new(1, 0, 1, 0)
+    hpBar.BackgroundColor3 = Color3.new(0, 1, 0)
+    hpBar.BorderSizePixel = 0
+    hpBar.Parent = hpBarBackground
+
+    local uiCorner2 = Instance.new("UICorner")
+    uiCorner2.CornerRadius = UDim.new(0, 10)
+    uiCorner2.Parent = hpBarBackground
+    local uiCorner3 = Instance.new("UICorner")
+    uiCorner3.CornerRadius = UDim.new(0, 10)
+    uiCorner3.Parent = hpBar
+
+    frame.Visible = false
+    return screenGui, frame, playerNameLabel, hpBar
+end
+
+local screenGui, frame, playerNameLabel, hpBar = createGui()
+
+
+local screenGui, frame, playerNameLabel, hpBar = createGui()
+
+local function updateGui()
+    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
+        local humanoid = targetPlayer.Character.Humanoid
+        playerNameLabel.Text = targetPlayer.Name
+        local hpPercentage = humanoid.Health / humanoid.MaxHealth
+        hpBar.Size = UDim2.new(hpPercentage, 0, 1, 0)
+        hpBar.BackgroundColor3 = Color3.new(1 - hpPercentage, hpPercentage, 0)
+        frame.Visible = true
+    else
+        frame.Visible = false
+    end
+end
+
+local function showGui()
+    frame.Position = UDim2.new(0.5, -125, 1, -120)  -- Positioned at bottom center
+    frame.Visible = true
+    local tween = TweenService:Create(frame, TweenInfo.new(0.5), {Position = UDim2.new(0.5, -125, 1, -120)})
+    tween:Play()
+end
+
+local function hideGui()
+    local tween = TweenService:Create(frame, TweenInfo.new(0.5), {Position = UDim2.new(0.5, -125, 1, -120)})
+    tween:Play()
+    tween.Completed:Connect(function()
+        frame.Visible = false
+    end)
+end
 local function getClosestPlayer()
     local Player = Players.LocalPlayer
     local Camera = Workspace.CurrentCamera
@@ -315,6 +310,8 @@ local function onPlayerRemoved(player)
         if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             lastKilledPlayerPosition = player.Character.HumanoidRootPart.Position
         end
+        targetPlayer = nil
+        updateGui()
     end
 end
 
@@ -330,53 +327,83 @@ local function updateCamLock()
             end
 
             local playerRootPart = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if playerRootPart then
-                if attackMethod == "Normal" then
-                    playerRootPart.CFrame = CFrame.new(playerRootPart.Position, targetPosition)
-                elseif attackMethod == "Above Head" then
-                    local radius = 5
-                    local height = 10
-                    local angle = tick() * 2
-                    local offset = Vector3.new(math.cos(angle) * radius, height, math.sin(angle) * radius)
-                    local newPosition = targetPosition + offset
+if playerRootPart then
+    if attackMethod == "Normal" then
+        playerRootPart.CFrame = CFrame.new(playerRootPart.Position, targetPosition)
+    elseif attackMethod == "Above Head" then
+        local radius = 5
+        local height = 10
+        local angle = tick() * 2
+        local offset = Vector3.new(math.cos(angle) * radius, height, math.sin(angle) * radius)
+        local newPosition = targetPosition + offset
 
-                    -- Check distance and adjust if necessary
-                    local distance = (playerRootPart.Position - newPosition).magnitude
-                    if distance > radius then
-                        playerRootPart.CFrame = CFrame.new(newPosition, targetPosition)
-                    end
-                elseif attackMethod == "Circle Around" then
-                    local radius = 10
-                    local speed = 200
-                    local angle = tick() * speed
-                    local offset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
-                    playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
-                elseif attackMethod == "Air" then
-                    local radius = 7
-                    local speed = 400  -- Increase speed for faster rotation
-                    local angle = tick() * speed
-                    local offset = Vector3.new(math.cos(angle) * radius, 5, math.sin(angle) * radius)
-                    playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
-                elseif attackMethod == "Underneath" then
-                    local offset = Vector3.new(0, -3, 0)  -- Position your character 3 studs below the target
-                    playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
-                elseif attackMethod == "Rotate Underneath" then
-                    local radius = 5
-                    local speed = 100
-                    local angle = tick() * speed
-                    local offset = Vector3.new(math.cos(angle) * radius, -3, math.sin(angle) * radius)
-                    playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
-                elseif attackMethod == "Behind" then
-                    local offset = Vector3.new(0, 0, -3)  -- Position your character directly behind the target
-                    playerRootPart.CFrame = CFrame.new(targetPosition - offset, targetPosition)
-                end
-            end
+        -- Check distance and adjust if necessary
+        local distance = (playerRootPart.Position - newPosition).magnitude
+        if distance > radius then
+            playerRootPart.CFrame = CFrame.new(newPosition, targetPosition)
+        end
+    elseif attackMethod == "Circle Around" then
+        local radius = 10
+        local speed = 200
+        local angle = tick() * speed
+        local offset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
+        playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
+    elseif attackMethod == "Air" then
+        local radius = 7
+        local speed = 400  -- Increase speed for faster rotation
+        local angle = tick() * speed
+        local offset = Vector3.new(math.cos(angle) * radius, 5, math.sin(angle) * radius)
+        playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
+    elseif attackMethod == "Underneath" then
+        local offset = Vector3.new(0, -3, 0)  -- Position your character 3 studs below the target
+        playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
+    elseif attackMethod == "Rotate Underneath" then
+        local radius = 5
+        local speed = 100
+        local angle = tick() * speed
+        local offset = Vector3.new(math.cos(angle) * radius, -3, math.sin(angle) * radius)
+        playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
+    elseif attackMethod == "Behind" then
+        local offset = Vector3.new(0, 0, -3)  -- Position your character directly behind the target
+        playerRootPart.CFrame = CFrame.new(targetPosition - offset, targetPosition)
+    elseif attackMethod == "HVH" then
+    local radius = 5
+    local speed = 200  -- Высокая скорость вращения
+    local height = 5   -- Высота над целью
+    local angle = tick() * speed
+    
+    -- Вычисляем позицию для вращения вокруг цели
+    local offset = Vector3.new(math.cos(angle) * radius, height, math.sin(angle) * radius)
+    local targetPosition = targetPlayer.Character.HumanoidRootPart.Position
+    local newPosition = targetPosition + offset
+    
+    -- Установка CFrame для персонажа
+    local playerRootPart = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if playerRootPart then
+        -- Установка CFrame для персонажа так, чтобы он был направлен на цель
+        playerRootPart.CFrame = CFrame.new(newPosition, targetPosition)
+        
+        -- Вращение персонажа вокруг своей оси для улучшения попадания
+        playerRootPart.CFrame = playerRootPart.CFrame * CFrame.Angles(0, tick() * speed, 0)
+    end
+    
+    -- Обновление CFrame для камеры
+    local camera = Workspace.CurrentCamera
+    local cameraOffset = Vector3.new(0, 3, 0)  -- Небольшое смещение камеры для лучшего обзора
+    local cameraPosition = newPosition + cameraOffset
+    camera.CFrame = CFrame.new(cameraPosition, newPosition)
+	end
+end
+
 
             local cameraPosition = Workspace.CurrentCamera.CFrame.Position
             local direction = (targetPosition - cameraPosition).unit
             Workspace.CurrentCamera.CFrame = CFrame.new(cameraPosition, targetPosition)
+            
+            updateGui()
         else
             targetPlayer = getClosestPlayer()
+            updateGui()
         end
     end
 end
@@ -384,24 +411,27 @@ end
 -- Connect to player removal event
 Players.PlayerRemoving:Connect(onPlayerRemoved)
 
-local Section = DH:AddSection({
-    Name = "CamLock"
-})
-
-DH:AddBind({
-    Name = "Toggle CamLock",
-    Default = Enum.KeyCode.Q,
-    Hold = false,
-    Callback = function()
-        camLockEnabled = not camLockEnabled
-        if camLockEnabled then
-            targetPlayer = getClosestPlayer()
+-- Bind to toggle cam lock
+local function toggleCamLock()
+    camLockEnabled = not camLockEnabled
+    if camLockEnabled then
+        targetPlayer = getClosestPlayer()
+        if targetPlayer then
+            showGui()
             spawn(updateCamLock)
-        else
-            Workspace.CurrentCamera.CameraSubject = Players.LocalPlayer.Character.Humanoid
         end
-    end    
-})
+    else
+        Workspace.CurrentCamera.CameraSubject = Players.LocalPlayer.Character.Humanoid
+        hideGui()
+    end
+end
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if input.KeyCode == Enum.KeyCode.Q and not gameProcessed then
+        toggleCamLock()
+    end
+end)
+
 
 DH:AddSlider({
     Name = "Distance",
@@ -428,18 +458,12 @@ DH:AddDropdown({
 DH:AddDropdown({
     Name = "Attack Method",
     Default = "Normal",
-    Options = {"Normal", "Above Head", "Circle Around", "Air", "Underneath", "Rotate Underneath", "Behind"},
+    Options = {"Normal", "Above Head", "Circle Around", "Air", "Underneath", "Rotate Underneath", "Behind", "HVH"},
     Callback = function(Value)
         attackMethod = Value
     end    
 })
 
-
-UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
-    if input.KeyCode == Enum.KeyCode.Q and camLockEnabled and not gameProcessedEvent then
-        targetPlayer = getClosestPlayer()
-    end
-end)
 
 
 
@@ -771,147 +795,124 @@ local Section = VS:AddSection({
 	Name = "Texts"
 })
 
+
+-- Получаем нужные сервисы
 local Players = game:GetService("Players")
-local player = Players.LocalPlayer
+local Workspace = game:GetService("Workspace")
 
--- Функция для создания и обновления текстовой метки под игроком
-local function setupPlayerGui()
-    local function onCharacterAdded(character)
-        if not character then return end
+-- Определяем игрока и необходимые переменные
+local localPlayer = Players.LocalPlayer
+local isSpectating = false
+local spectatingPlayer = nil
+local originalPosition = nil
 
-        local head = character:FindFirstChild("Head")
-        if not head then return end
-
-        -- Создание BillboardGui
-        local billboardGui = Instance.new("BillboardGui")
-        billboardGui.Adornee = head
-        billboardGui.Parent = head
-        billboardGui.Size = UDim2.new(0, 100, 0, 50)
-        billboardGui.StudsOffset = Vector3.new(0, 2, 0) -- Позиционирование текста над головой
-
-        -- Создание TextLabel
-        local textLabel = Instance.new("TextLabel")
-        textLabel.Parent = billboardGui
-        textLabel.Size = UDim2.new(1, 0, 1, 0)
-        textLabel.BackgroundTransparency = 1
-        textLabel.TextScaled = true
-        textLabel.Text = "[None]"
-
-        -- Функция для обновления текста
-        local function updateText()
-            -- Найдите инструмент в персонаже (в руках) или в рюкзаке
-            local tool = character:FindFirstChildOfClass("Tool") or player.Backpack:FindFirstChildOfClass("Tool")
-            local toolName = tool and tool.Name or "None"
-            textLabel.Text = "[" .. toolName .. "]"
-        end
-
-        -- Подключение к событиям для обновления текста
-        player.Backpack.ChildAdded:Connect(updateText)
-        player.Backpack.ChildRemoved:Connect(updateText)
-        character.ChildAdded:Connect(updateText)
-        character.ChildRemoved:Connect(updateText)
-
-        -- Обновление текста при изменении предметов в руках
-        local function onToolEquipped(tool)
-            updateText()
-        end
-
-        local function onToolUnequipped()
-            updateText()
-        end
-
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            humanoid.Equipped:Connect(onToolEquipped)
-            humanoid.Unequipped:Connect(onToolUnequipped)
-        end
-
-        -- Изначально обновляем текст
-        updateText()
-    end
-
-    -- Подписываемся на событие добавления персонажа
-    player.CharacterAdded:Connect(onCharacterAdded)
-
-    -- Обрабатываем случай, если персонаж уже есть
-    if player.Character then
-        onCharacterAdded(player.Character)
-    end
-end
-
--- Очистка BillboardGui
-local function clearPlayerGui()
-    local character = player.Character
-    if character then
-        local head = character:FindFirstChild("Head")
-        if head then
-            local billboardGui = head:FindFirstChildOfClass("BillboardGui")
-            if billboardGui then
-                billboardGui:Destroy()
-            end
-        end
-    end
-end
-
-
-
-Tab:AddToggle({
-    Name = "Toggle Text Display",
-    Default = false,
-    Callback = function(isEnabled)
-        if isEnabled then
-            setupPlayerGui()
-        else
-            clearPlayerGui()
-        end
-    end
-})
-
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local Camera = game.Workspace.CurrentCamera
-
-local targetPlayer = nil
-
--- Функция для слежения за игроком
-local function startSpectating(playerName)
-    local player = Players:FindFirstChild(playerName)
-    if player and player.Character then
-        targetPlayer = player
-        Camera.CameraSubject = player.Character:FindFirstChild("Humanoid")
+-- Функция для сохранения текущего положения
+local function saveOriginalPosition()
+    if localPlayer.Character and localPlayer.Character.PrimaryPart then
+        originalPosition = localPlayer.Character.PrimaryPart.CFrame
     else
-        print("Player not found or not in the game.")
+        print("PrimaryPart not found in character.")
     end
 end
 
--- Функция для прекращения слежения
-local function stopSpectating()
-    targetPlayer = nil
-    Camera.CameraSubject = LocalPlayer.Character:FindFirstChild("Humanoid")
+-- Функция для телепортации к игроку
+local function teleportToPlayer(targetPlayer)
+    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        -- Сохраняем текущее положение перед телепортацией
+        saveOriginalPosition()
+        -- Телепортируем к целевому игроку
+        localPlayer.Character:SetPrimaryPartCFrame(targetPlayer.Character.HumanoidRootPart.CFrame)
+        print("Teleported to", targetPlayer.Name)
+    else
+        print("Target player or their character is not available.")
+    end
 end
 
--- Функция для обработки сообщений в чате
-local function onChatted(player, message)
-    if player == LocalPlayer then
-        local command, argument = message:match("^(;spec) (%w+)$")
-        if command == ";spec" and argument then
-            startSpectating(argument)
-        elseif message:lower() == ";unspec" then
-            stopSpectating()
+-- Функция для наблюдения за игроком
+local function startSpectating(targetPlayer)
+    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        -- Переключаем камеру на целевого игрока
+        Workspace.CurrentCamera.CameraSubject = targetPlayer.Character:FindFirstChildOfClass("Humanoid")
+        isSpectating = true
+        spectatingPlayer = targetPlayer
+        print("Started spectating", targetPlayer.Name)
+    else
+        print("Target player or their character is not available.")
+    end
+end
+
+-- Функция для прекращения наблюдения
+local function stopSpectating()
+    if isSpectating then
+        -- Возвращаем камеру к игроку
+        Workspace.CurrentCamera.CameraSubject = localPlayer.Character and localPlayer.Character:FindFirstChildOfClass("Humanoid")
+        isSpectating = false
+        spectatingPlayer = nil
+        print("Stopped spectating.")
+    else
+        print("Not currently spectating.")
+    end
+end
+
+-- Функция для телепортации перед игроком и возврата
+local function spookPlayer(targetPlayer)
+    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        -- Сохраняем текущее положение перед телепортацией
+        saveOriginalPosition()
+        -- Телепортируем перед целевым игроком
+        local humanoidRootPart = targetPlayer.Character.HumanoidRootPart
+        local direction = (humanoidRootPart.Position - localPlayer.Character.PrimaryPart.Position).unit
+        local newPosition = humanoidRootPart.Position - direction * 5 -- Позиция перед игроком, на 5 studs от него
+
+        -- Перемещаем игрока перед целевым игроком
+        localPlayer.Character:SetPrimaryPartCFrame(CFrame.new(newPosition, humanoidRootPart.Position))
+        wait(1) -- Ожидаем 1 секунду
+
+        -- Возвращаем игрока на исходное место
+        if originalPosition then
+            localPlayer.Character:SetPrimaryPartCFrame(originalPosition)
+            print("Spooked", targetPlayer.Name, "and returned to original position.")
+        else
+            print("No original position to return to.")
+        end
+    else
+        print("Target player or their character is not available.")
+    end
+end
+
+-- Обработчик сообщений чата
+local function onPlayerChatted(message)
+    local args = message:split(" ")
+    if args[1] == ".tpa" and #args == 2 then
+        local targetPlayerName = args[2]
+        local targetPlayer = Players:FindFirstChild(targetPlayerName)
+        if targetPlayer then
+            teleportToPlayer(targetPlayer)
+        else
+            print("Player not found.")
+        end
+    elseif args[1] == ".spec" and #args == 2 then
+        local targetPlayerName = args[2]
+        local targetPlayer = Players:FindFirstChild(targetPlayerName)
+        if targetPlayer then
+            startSpectating(targetPlayer)
+        else
+            print("Player not found.")
+        end
+    elseif args[1] == ".unspec" then
+        stopSpectating()
+    elseif args[1] == ".spook" and #args == 2 then
+        local targetPlayerName = args[2]
+        local targetPlayer = Players:FindFirstChild(targetPlayerName)
+        if targetPlayer then
+            spookPlayer(targetPlayer)
+        else
+            print("Player not found.")
         end
     end
 end
 
--- Подписка на событие чата для всех игроков
-Players.PlayerAdded:Connect(function(player)
-    player.Chatted:Connect(function(message)
-        onChatted(player, message)
-    end)
-end)
+-- Подключаем обработчик сообщений чата
+localPlayer.Chatted:Connect(onPlayerChatted)
 
--- Подписка на событие чата для уже существующих игроков
-for _, player in ipairs(Players:GetPlayers()) do
-    player.Chatted:Connect(function(message)
-        onChatted(player, message)
-    end)
-end
+
