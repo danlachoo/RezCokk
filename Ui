@@ -45,6 +45,9 @@ local cfg = Window:MakeTab({
     PremiumOnly = false
 })
 
+
+
+
 local screenGui = Instance.new("ScreenGui", game.Players.LocalPlayer:WaitForChild("PlayerGui"))
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -184,6 +187,11 @@ Tab:AddSlider({
         game.Workspace.CurrentCamera.FieldOfView = Value
     end    
 })
+
+
+
+
+
 
 DH:AddLabel("Enable CamLock [Q]")
 
@@ -342,92 +350,84 @@ local function updateCamLock()
                 targetPosition = targetPlayer.Character.HumanoidRootPart.Position
             end
 
-            local playerRootPart = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if playerRootPart then
-                if attackMethod == "Normal" then
-                    playerRootPart.CFrame = CFrame.new(playerRootPart.Position, targetPosition)
-                elseif attackMethod == "Above Head" then
-                    local radius = 5
-                    local height = 10
-                    local angle = tick() * 2
-                    local offset = Vector3.new(math.cos(angle) * radius, height, math.sin(angle) * radius)
-                    local newPosition = targetPosition + offset
+            local camera = Workspace.CurrentCamera
+            local cameraPosition = camera.CFrame.Position
+            local direction = (targetPosition - cameraPosition).unit
 
-                    local distance = (playerRootPart.Position - newPosition).magnitude
-                    if distance > radius then
-                        playerRootPart.CFrame = CFrame.new(newPosition, targetPosition)
-                    end
-                elseif attackMethod == "Circle Around" then
-                    local radius = 10
-                    local speed = 200
-                    local angle = tick() * speed
-                    local offset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
-                    playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
-                elseif attackMethod == "Air" then
-                    local radius = 7
-                    local speed = 400
-                    local angle = tick() * speed
-                    local offset = Vector3.new(math.cos(angle) * radius, 5, math.sin(angle) * radius)
-                    playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
-                elseif attackMethod == "Underneath" then
-                    local offset = Vector3.new(0, -3, 0)
-                    playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
-                elseif attackMethod == "Rotate Underneath" then
-                    local radius = 5
-                    local speed = 100
-                    local angle = tick() * speed
-                    local offset = Vector3.new(math.cos(angle) * radius, -3, math.sin(angle) * radius)
-                    playerRootPart.CFrame = CFrame.new(targetPosition + offset, targetPosition)
-                elseif attackMethod == "AdvancedEvasion" then
-                    local radius = 10
-                    local speed = 300
-                    local angle = tick() * speed
-                    local offset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
-                    local newPosition = targetPosition + offset
+            if attackMethod == "Normal" then
+                camera.CFrame = CFrame.new(cameraPosition, targetPosition)
+            elseif attackMethod == "Legit Smooth" then
+                local targetCFrame = CFrame.new(cameraPosition, targetPosition)
+                camera.CFrame = camera.CFrame:Lerp(targetCFrame, 0.1) -- 0.1 - скорость интерполяции
+            elseif attackMethod == "Above Head" then
+                -- Only update camera, not player
+                local radius = 5
+                local height = 10
+                local angle = tick() * 2
+                local offset = Vector3.new(math.cos(angle) * radius, height, math.sin(angle) * radius)
+                local newCameraPosition = targetPosition + offset
+                camera.CFrame = CFrame.new(newCameraPosition, targetPosition)
+            elseif attackMethod == "Circle Around" then
+                -- Only update camera, not player
+                local radius = 10
+                local speed = 200
+                local angle = tick() * speed
+                local offset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
+                camera.CFrame = CFrame.new(targetPosition + offset, targetPosition)
+            elseif attackMethod == "Air" then
+                -- Only update camera, not player
+                local radius = 7
+                local speed = 400
+                local angle = tick() * speed
+                local offset = Vector3.new(math.cos(angle) * radius, 5, math.sin(angle) * radius)
+                camera.CFrame = CFrame.new(targetPosition + offset, targetPosition)
+            elseif attackMethod == "Underneath" then
+                -- Only update camera, not player
+                local offset = Vector3.new(0, -3, 0)
+                camera.CFrame = CFrame.new(targetPosition + offset, targetPosition)
+            elseif attackMethod == "Rotate Underneath" then
+                -- Only update camera, not player
+                local radius = 5
+                local speed = 100
+                local angle = tick() * speed
+                local offset = Vector3.new(math.cos(angle) * radius, -3, math.sin(angle) * radius)
+                camera.CFrame = CFrame.new(targetPosition + offset, targetPosition)
+            elseif attackMethod == "AdvancedEvasion" then
+                -- Only update camera, not player
+                local radius = 10
+                local speed = 300
+                local angle = tick() * speed
+                local offset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
+                local newCameraPosition = targetPosition + offset
+                camera.CFrame = CFrame.new(newCameraPosition, targetPosition)
 
-                    local distance = (playerRootPart.Position - newPosition).magnitude
-                    if distance > radius then
-                        playerRootPart.CFrame = CFrame.new(newPosition, targetPosition)
-                    end
-                    
-                    -- High-speed zigzag movement
-                    local zigzagSpeed = 5
-                    local zigzagAngle = tick() * zigzagSpeed
-                    local zigzagOffset = Vector3.new(math.sin(zigzagAngle) * 5, 0, 0)
-                    playerRootPart.CFrame = CFrame.new(playerRootPart.Position + zigzagOffset, targetPosition)
-                elseif attackMethod == "HVH" then
-					local radius = 15
-    				local speed = 600
-    				local angle = tick() * speed
-    				local offset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
-    				local newPosition = targetPosition + offset
-				
-    				-- Update player position with high-speed movement
-    				playerRootPart.CFrame = CFrame.new(newPosition, targetPosition)
-				
-    				-- Additional aggressive zigzag movement
-    				local zigzagSpeed = 10
-    				local zigzagAngle = tick() * zigzagSpeed
-    				local zigzagOffset = Vector3.new(math.sin(zigzagAngle) * 10, 0, 0)
-    				playerRootPart.CFrame = CFrame.new(playerRootPart.Position + zigzagOffset, targetPosition)
-				
-    				-- High-speed rotation to match target's position
-    				local rotationSpeed = 5
-    				local rotationAngle = tick() * rotationSpeed
-    				local rotationOffset = CFrame.Angles(0, rotationAngle, 0)
-    				playerRootPart.CFrame = playerRootPart.CFrame * rotationOffset
-				
-    				-- Adjust camera to follow the aggressive movement
-    				local cameraPosition = Workspace.CurrentCamera.CFrame.Position
-    				local direction = (targetPosition - cameraPosition).unit
-    				Workspace.CurrentCamera.CFrame = CFrame.new(cameraPosition, targetPosition)
-                end
+                -- High-speed zigzag movement
+                local zigzagSpeed = 5
+                local zigzagAngle = tick() * zigzagSpeed
+                local zigzagOffset = Vector3.new(math.sin(zigzagAngle) * 5, 0, 0)
+                camera.CFrame = CFrame.new(camera.CFrame.Position + zigzagOffset, targetPosition)
+            elseif attackMethod == "HVH" then
+                -- Only update camera, not player
+                local radius = 15
+                local speed = 600
+                local angle = tick() * speed
+                local offset = Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
+                local newCameraPosition = targetPosition + offset
+                camera.CFrame = CFrame.new(newCameraPosition, targetPosition)
+
+                -- Additional aggressive zigzag movement
+                local zigzagSpeed = 10
+                local zigzagAngle = tick() * zigzagSpeed
+                local zigzagOffset = Vector3.new(math.sin(zigzagAngle) * 10, 0, 0)
+                camera.CFrame = CFrame.new(camera.CFrame.Position + zigzagOffset, targetPosition)
+
+                -- High-speed rotation to match target's position
+                local rotationSpeed = 5
+                local rotationAngle = tick() * rotationSpeed
+                local rotationOffset = CFrame.Angles(0, rotationAngle, 0)
+                camera.CFrame = camera.CFrame * rotationOffset
             end
 
-            local cameraPosition = Workspace.CurrentCamera.CFrame.Position
-            local direction = (targetPosition - cameraPosition).unit
-            Workspace.CurrentCamera.CFrame = CFrame.new(cameraPosition, targetPosition)
-            
             updateGui()
 
             if targetPlayer.Character.Humanoid.Health <= 0 then
@@ -440,6 +440,7 @@ local function updateCamLock()
         end
     end
 end
+
 
 -- Connect to player removal event
 Players.PlayerRemoving:Connect(onPlayerRemoved)
@@ -493,7 +494,7 @@ DH:AddDropdown({
 DH:AddDropdown({
     Name = "Attack Method",
     Default = "Normal",
-    Options = {"Normal", "Above Head", "Circle Around", "Air", "Underneath", "Rotate Underneath", "AdvancedEvasion", "HVH"},
+    Options = {"Normal", "Legit Smooth", "Above Head", "Circle Around", "Air", "Underneath", "Rotate Underneath", "AdvancedEvasion", "HVH"},
     Callback = function(Value)
         attackMethod = Value
     end    
@@ -711,6 +712,49 @@ DH:AddButton({
       		loadstring(game:HttpGet("https://pastebin.com/raw/sUA9m6M6"))()
   	end    
 })
+
+DH:AddButton({
+	Name = "No Jump-Coldown",
+    Callback = function(Value)
+        local player = game.Players.LocalPlayer
+        local spacedown = false
+        local staminup = Value
+
+        -- Функция для обработки нажатия клавиши
+        local function onInputBegan(key, b)
+            if key.KeyCode == Enum.KeyCode.Space and not b then
+                if staminup then
+                    spacedown = true
+                    while spacedown do
+                        wait()
+                        local humanoid = player.Character:FindFirstChildWhichIsA('Humanoid')
+                        if humanoid then
+                            humanoid.JumpPower = 50
+                            humanoid.Jump = true
+                            humanoid.JumpPower = 50
+                        end
+                    end
+                end
+            end
+        end
+
+        -- Функция для обработки отпускания клавиши
+        local function onInputEnded(key)
+            if key.KeyCode == Enum.KeyCode.Space then
+                spacedown = false
+            end
+        end
+
+        -- Подключаем события
+        if staminup then
+            game:GetService('UserInputService').InputBegan:Connect(onInputBegan)
+            game:GetService('UserInputService').InputEnded:Connect(onInputEnded)
+        else
+            spacedown = false
+        end
+    end
+})
+
 
 DH:AddButton({
 	Name = "No recoil",
@@ -932,7 +976,7 @@ end
 local function updateTrollPosition()
     if trollingEnabled and trollingPlayer and trollingPlayer.Character and trollingPlayer.Character:FindFirstChild("HumanoidRootPart") then
         local humanoidRootPart = trollingPlayer.Character.HumanoidRootPart
-        localPlayer.Character:SetPrimaryPartCFrame(CFrame.new(humanoidRootPart.Position - Vector3.new(0, 8, 0), humanoidRootPart.Position))
+        localPlayer.Character:SetPrimaryPartCFrame(CFrame.new(humanoidRootPart.Position - Vector3.new(0, 13, 0), humanoidRootPart.Position))
     end
 end
 -- Обработчик сообщений чата
@@ -1036,9 +1080,14 @@ if Targets and Targets.AddButton then
         end    
     })
 
+	-- Добавляем секцию для функций
+	local Section = Targets:AddSection({
+	    Name = "Troll"
+	})
+
     -- Добавляем кнопку для троллинга
     Targets:AddButton({
-        Name = "Troll Player",
+        Name = "Troll Player (Required BoomBox)",
         Callback = function()
             trollPlayer(Players:FindFirstChild(selectedPlayerName))
         end    
@@ -1074,3 +1123,13 @@ end)
 
 -- Обновляем позицию под игроком в цикле
 RunService.RenderStepped:Connect(updateTrollPosition)
+
+
+--Misc
+
+MiscTab:AddButton({
+	Name = "Chat Logs",
+	Callback = function()
+      	loadstring(game:HttpGet("https://pastebin.com/raw/nzXicwc1", true))()
+  	end    
+})
