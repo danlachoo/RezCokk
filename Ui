@@ -834,12 +834,15 @@ local Section = VS:AddSection({
 -- Получаем нужные сервисы
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
 
 -- Определяем игрока и необходимые переменные
 local localPlayer = Players.LocalPlayer
 local isSpectating = false
 local spectatingPlayer = nil
 local originalPosition = nil
+local trollingPlayer = nil
+local trollingEnabled = false
 
 -- Функция для сохранения текущего положения
 local function saveOriginalPosition()
@@ -853,9 +856,7 @@ end
 -- Функция для телепортации к игроку
 local function teleportToPlayer(targetPlayer)
     if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        -- Сохраняем текущее положение перед телепортацией
         saveOriginalPosition()
-        -- Телепортируем к целевому игроку
         localPlayer.Character:SetPrimaryPartCFrame(targetPlayer.Character.HumanoidRootPart.CFrame)
         print("Teleported to", targetPlayer.Name)
     else
@@ -866,7 +867,6 @@ end
 -- Функция для наблюдения за игроком
 local function startSpectating(targetPlayer)
     if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        -- Переключаем камеру на целевого игрока
         Workspace.CurrentCamera.CameraSubject = targetPlayer.Character:FindFirstChildOfClass("Humanoid")
         isSpectating = true
         spectatingPlayer = targetPlayer
@@ -879,7 +879,6 @@ end
 -- Функция для прекращения наблюдения
 local function stopSpectating()
     if isSpectating then
-        -- Возвращаем камеру к игроку
         Workspace.CurrentCamera.CameraSubject = localPlayer.Character and localPlayer.Character:FindFirstChildOfClass("Humanoid")
         isSpectating = false
         spectatingPlayer = nil
@@ -892,18 +891,12 @@ end
 -- Функция для телепортации перед игроком и возврата
 local function spookPlayer(targetPlayer)
     if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        -- Сохраняем текущее положение перед телепортацией
         saveOriginalPosition()
-        -- Телепортируем перед целевым игроком
         local humanoidRootPart = targetPlayer.Character.HumanoidRootPart
         local direction = (humanoidRootPart.Position - localPlayer.Character.PrimaryPart.Position).unit
-        local newPosition = humanoidRootPart.Position - direction * 5 -- Позиция перед игроком, на 5 studs от него
-
-        -- Перемещаем игрока перед целевым игроком
+        local newPosition = humanoidRootPart.Position - direction * 5
         localPlayer.Character:SetPrimaryPartCFrame(CFrame.new(newPosition, humanoidRootPart.Position))
-        wait(1) -- Ожидаем 1 секунду
-
-        -- Возвращаем игрока на исходное место
+        wait(1)
         if originalPosition then
             localPlayer.Character:SetPrimaryPartCFrame(originalPosition)
             print("Spooked", targetPlayer.Name, "and returned to original position.")
@@ -915,6 +908,33 @@ local function spookPlayer(targetPlayer)
     end
 end
 
+-- Функция для троллинга игрока
+local function trollPlayer(targetPlayer)
+    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        trollingPlayer = targetPlayer
+        trollingEnabled = true
+        Workspace.CurrentCamera.CameraSubject = targetPlayer.Character
+        print("Trolling player:", targetPlayer.Name)
+    else
+        print("Target player or their character is not available.")
+    end
+end
+
+-- Функция для прекращения троллинга
+local function stopTrolling()
+    trollingEnabled = false
+    trollingPlayer = nil
+    Workspace.CurrentCamera.CameraSubject = localPlayer.Character and localPlayer.Character:FindFirstChildOfClass("Humanoid")
+    print("Stopped trolling.")
+end
+
+-- Функция для перемещения под игроком
+local function updateTrollPosition()
+    if trollingEnabled and trollingPlayer and trollingPlayer.Character and trollingPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local humanoidRootPart = trollingPlayer.Character.HumanoidRootPart
+        localPlayer.Character:SetPrimaryPartCFrame(CFrame.new(humanoidRootPart.Position - Vector3.new(0, 8, 0), humanoidRootPart.Position))
+    end
+end
 -- Обработчик сообщений чата
 local function onPlayerChatted(message)
     local args = message:split(" ")
@@ -944,79 +964,39 @@ local function onPlayerChatted(message)
         else
             print("Player not found.")
         end
+    elseif args[1] == ".troll" and #args == 2 then
+        local targetPlayerName = args[2]
+        local targetPlayer = Players:FindFirstChild(targetPlayerName)
+        if targetPlayer then
+            trollPlayer(targetPlayer)
+        else
+            print("Player not found.")
+        end
+    elseif args[1] == ".untroll" then
+        stopTrolling()
     end
 end
 
--- Подключаем обфработчик сообщений чата
+-- Подключаем обработчик сообщений чата
 localPlayer.Chatted:Connect(onPlayerChatted)
 
-local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
-local LocalPlayer = Players.LocalPlayer
-
--- Variable to hold the selected player's name
-local selectedPlayerName = nil
-
--- Function to teleport the local player's character to the selected player's position
-local function TeleportToPlayer()
-    if LocalPlayer and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        if selectedPlayerName then
-            local targetPlayer = Players:FindFirstChild(selectedPlayerName)
-            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                -- Teleport the local player's character to the target player's position
-                LocalPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
-                print("Teleported to " .. selectedPlayerName)
-            else
-                warn("Target player or their character not found.")
-            end
-        else
-            warn("No player selected for teleportation.")
-        end
-    else
-        warn("LocalPlayer or their character not found.")
-    end
-end
-
--- Function to spectate the selected player
-local function SpectatePlayer()
-    if selectedPlayerName then
-        local targetPlayer = Players:FindFirstChild(selectedPlayerName)
-        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            Workspace.CurrentCamera.CameraSubject = targetPlayer.Character
-            print("Spectating player: " .. targetPlayer.Name)
-        else
-            warn("Target player or their character not found.")
-        end
-    else
-        warn("No player selected for spectation.")
-    end
-end
-
--- Function to stop spectating
-local function UnspectatePlayer()
-    if LocalPlayer and LocalPlayer.Character then
-        Workspace.CurrentCamera.CameraSubject = LocalPlayer.Character
-        print("Stopped spectating.")
-    end
-end
-
--- Define a function to update dropdown options with player names
+-- Функция для обновления выпадающего списка с именами игроков
 local function UpdateDropdownOptions()
     local playerNames = {}
     for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then  -- Exclude the local player if needed
+        if player ~= localPlayer then
             table.insert(playerNames, player.Name)
         end
     end
     return playerNames
 end
 
--- Add a dropdown menu to select a player
+-- Добавляем выпадающий список для выбора игрока
 if Targets and Targets.AddDropdown then
     Targets:AddDropdown({
         Name = "Select Player",
         Default = "None",
-        Options = UpdateDropdownOptions(),  -- Populate with player names
+        Options = UpdateDropdownOptions(),
         Callback = function(selectedName)
             selectedPlayerName = selectedName
             print("Selected player: " .. selectedPlayerName)
@@ -1026,43 +1006,59 @@ else
     warn("Targets or Targets:AddDropdown is not defined.")
 end
 
--- Add a section for functions
+-- Добавляем секцию для функций
 local Section = Targets:AddSection({
     Name = "Functions"
 })
 
--- Add button to teleport the local player to the selected player's position
+-- Добавляем кнопку для телепортации к выбранному игроку
 if Targets and Targets.AddButton then
     Targets:AddButton({
         Name = "Teleport to Player",
         Callback = function()
-            TeleportToPlayer()
+            teleportToPlayer(Players:FindFirstChild(selectedPlayerName))
         end    
     })
 
-    -- Add button to spectate the selected player
+    -- Добавляем кнопку для наблюдения за выбранным игроком
     Targets:AddButton({
         Name = "Spectate Player",
         Callback = function()
-            SpectatePlayer()
+            startSpectating(Players:FindFirstChild(selectedPlayerName))
         end    
     })
 
-    -- Add button to stop spectating
+    -- Добавляем кнопку для прекращения наблюдения
     Targets:AddButton({
         Name = "Unspectate",
         Callback = function()
-            UnspectatePlayer()
+            stopSpectating()
+        end    
+    })
+
+    -- Добавляем кнопку для троллинга
+    Targets:AddButton({
+        Name = "Troll Player",
+        Callback = function()
+            trollPlayer(Players:FindFirstChild(selectedPlayerName))
+        end    
+    })
+
+    -- Добавляем кнопку для прекращения троллинга
+    Targets:AddButton({
+        Name = "Untroll",
+        Callback = function()
+            stopTrolling()
         end    
     })
 else
     warn("Targets or Targets:AddButton is not defined.")
 end
 
--- Update dropdown options when players are added or removed
+-- Обновляем выпадающий список при добавлении или удалении игроков
 Players.PlayerAdded:Connect(function()
     if Targets and Targets.UpdateDropdownOptions then
-        Targets:UpdateDropdownOptions(UpdateDropdownOptions())  -- Update options
+        Targets:UpdateDropdownOptions(UpdateDropdownOptions())
     else
         warn("Targets or Targets:UpdateDropdownOptions is not defined.")
     end
@@ -1070,8 +1066,11 @@ end)
 
 Players.PlayerRemoving:Connect(function()
     if Targets and Targets.UpdateDropdownOptions then
-        Targets:UpdateDropdownOptions(UpdateDropdownOptions())  -- Update options
+        Targets:UpdateDropdownOptions(UpdateDropdownOptions())
     else
         warn("Targets or Targets:UpdateDropdownOptions is not defined.")
     end
 end)
+
+-- Обновляем позицию под игроком в цикле
+RunService.RenderStepped:Connect(updateTrollPosition)
