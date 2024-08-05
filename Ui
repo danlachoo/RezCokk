@@ -140,6 +140,8 @@ local function moveCharacter()
     end
 end
 
+
+
 -- Добавляем ползунок на вкладку
 Tab:AddSlider({
     Name = "CFrame Speed",
@@ -948,4 +950,128 @@ end
 -- Подключаем обфработчик сообщений чата
 localPlayer.Chatted:Connect(onPlayerChatted)
 
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
 
+-- Variable to hold the selected player's name
+local selectedPlayerName = nil
+
+-- Function to teleport the local player's character to the selected player's position
+local function TeleportToPlayer()
+    if LocalPlayer and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        if selectedPlayerName then
+            local targetPlayer = Players:FindFirstChild(selectedPlayerName)
+            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                -- Teleport the local player's character to the target player's position
+                LocalPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
+                print("Teleported to " .. selectedPlayerName)
+            else
+                warn("Target player or their character not found.")
+            end
+        else
+            warn("No player selected for teleportation.")
+        end
+    else
+        warn("LocalPlayer or their character not found.")
+    end
+end
+
+-- Function to spectate the selected player
+local function SpectatePlayer()
+    if selectedPlayerName then
+        local targetPlayer = Players:FindFirstChild(selectedPlayerName)
+        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            Workspace.CurrentCamera.CameraSubject = targetPlayer.Character
+            print("Spectating player: " .. targetPlayer.Name)
+        else
+            warn("Target player or their character not found.")
+        end
+    else
+        warn("No player selected for spectation.")
+    end
+end
+
+-- Function to stop spectating
+local function UnspectatePlayer()
+    if LocalPlayer and LocalPlayer.Character then
+        Workspace.CurrentCamera.CameraSubject = LocalPlayer.Character
+        print("Stopped spectating.")
+    end
+end
+
+-- Define a function to update dropdown options with player names
+local function UpdateDropdownOptions()
+    local playerNames = {}
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then  -- Exclude the local player if needed
+            table.insert(playerNames, player.Name)
+        end
+    end
+    return playerNames
+end
+
+-- Add a dropdown menu to select a player
+if Targets and Targets.AddDropdown then
+    Targets:AddDropdown({
+        Name = "Select Player",
+        Default = "None",
+        Options = UpdateDropdownOptions(),  -- Populate with player names
+        Callback = function(selectedName)
+            selectedPlayerName = selectedName
+            print("Selected player: " .. selectedPlayerName)
+        end    
+    })
+else
+    warn("Targets or Targets:AddDropdown is not defined.")
+end
+
+-- Add a section for functions
+local Section = Targets:AddSection({
+    Name = "Functions"
+})
+
+-- Add button to teleport the local player to the selected player's position
+if Targets and Targets.AddButton then
+    Targets:AddButton({
+        Name = "Teleport to Player",
+        Callback = function()
+            TeleportToPlayer()
+        end    
+    })
+
+    -- Add button to spectate the selected player
+    Targets:AddButton({
+        Name = "Spectate Player",
+        Callback = function()
+            SpectatePlayer()
+        end    
+    })
+
+    -- Add button to stop spectating
+    Targets:AddButton({
+        Name = "Unspectate",
+        Callback = function()
+            UnspectatePlayer()
+        end    
+    })
+else
+    warn("Targets or Targets:AddButton is not defined.")
+end
+
+-- Update dropdown options when players are added or removed
+Players.PlayerAdded:Connect(function()
+    if Targets and Targets.UpdateDropdownOptions then
+        Targets:UpdateDropdownOptions(UpdateDropdownOptions())  -- Update options
+    else
+        warn("Targets or Targets:UpdateDropdownOptions is not defined.")
+    end
+end)
+
+Players.PlayerRemoving:Connect(function()
+    if Targets and Targets.UpdateDropdownOptions then
+        Targets:UpdateDropdownOptions(UpdateDropdownOptions())  -- Update options
+    else
+        warn("Targets or Targets:UpdateDropdownOptions is not defined.")
+    end
+end)
