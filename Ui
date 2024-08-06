@@ -195,11 +195,11 @@ Tab:AddSlider({
 
 DH:AddLabel("Enable CamLock [Q]")
 
-
 local camLockEnabled = false
 local targetPlayer = nil
 local whitelist = {}
 local attackMethod = "Normal"
+local targetingMethod = "Closest Player"
 local lastKilledPlayerPosition = nil
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
@@ -328,6 +328,35 @@ local function getClosestPlayer()
     return closestPlayer
 end
 
+local function getTargetPlayer()
+    local Player = Players.LocalPlayer
+    local Camera = Workspace.CurrentCamera
+    local closestPlayer = nil
+
+    if targetingMethod == "Closest Player" then
+        closestPlayer = getClosestPlayer()
+    elseif targetingMethod == "Player Facing" then
+        local closestAngle = math.huge
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= Player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                if not table.find(whitelist, player.Name) then
+                    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        local direction = (player.Character.HumanoidRootPart.Position - Camera.CFrame.Position).unit
+                        local angle = math.acos(Camera.CFrame.LookVector:Dot(direction))
+                        if angle < math.rad(15) and angle < closestAngle then
+                            closestAngle = angle
+                            closestPlayer = player
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    return closestPlayer
+end
+
 local function onPlayerRemoved(player)
     if targetPlayer == player then
         if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
@@ -435,7 +464,7 @@ local function updateCamLock()
                 hideGui()
             end
         else
-            targetPlayer = getClosestPlayer()
+            targetPlayer = getTargetPlayer()
             updateGui()
         end
     end
@@ -449,7 +478,7 @@ Players.PlayerRemoving:Connect(onPlayerRemoved)
 local function toggleCamLock()
     camLockEnabled = not camLockEnabled
     if camLockEnabled then
-        targetPlayer = getClosestPlayer()
+        targetPlayer = getTargetPlayer()
         if targetPlayer then
             showGui()
             spawn(updateCamLock)
@@ -465,9 +494,6 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
         toggleCamLock()
     end
 end)
-
-
-
 
 DH:AddSlider({
     Name = "Distance",
@@ -497,6 +523,15 @@ DH:AddDropdown({
     Options = {"Normal", "Legit Smooth", "Above Head", "Circle Around", "Air", "Underneath", "Rotate Underneath", "AdvancedEvasion", "HVH"},
     Callback = function(Value)
         attackMethod = Value
+    end    
+})
+
+DH:AddDropdown({
+    Name = "Targeting Method",
+    Default = "Closest Player",
+    Options = {"Closest Player", "Player Facing"},
+    Callback = function(Value)
+        targetingMethod = Value
     end    
 })
 
